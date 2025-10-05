@@ -1,0 +1,9 @@
+LICENSE FOR STOCKFISH
+
+This Stockfish chess engine is a javascript implementation of official Stockfish.
+
+https://github.com/official-stockfish/Stockfish
+
+GPLv3:
+
+https://raw.githubusercontent.com/nmrugg/stockfish.js/master/license.txt

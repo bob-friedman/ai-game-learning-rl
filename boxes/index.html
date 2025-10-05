@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Boxes</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-container">
+    <div id="topbar">
+      <div class="controls-group">
+        <select id="levelSelect"></select>
+        <button id="undoBtn">Undo</button>
+        <button id="toggleDpadBtn">Controls</button>
+      </div>
+    </div>
+    <div id="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+    <div id="dpad">
+      <button class="dbtn" data-dir="up">↑</button>
+      <div class="row">
+        <button class="dbtn" data-dir="left">←</button>
+        <button class="dbtn" data-dir="down">↓</button>
+        <button class="dbtn" data-dir="right">→</button>
+      </div>
+    </div>
+  </div>
+  <script src="boxes.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+The Microban sets of levels were created by David W. Skinner:
+Microban I (155 puzzles, April, 2000)
+Microban II (135 puzzles, April, 2002)
+Microban III (101 puzzles, December 2009) 
+Microban IV (102 puzzles, August 2010)
+
+This set may be freely distributed provided they remain properly credited. Please visit this webpage for further details:
+http://www.abelmartin.com/rj/sokobanJS/Skinner/David%20W.%20Skinner%20-%20Sokoban.htm

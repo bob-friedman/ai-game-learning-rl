@@ -1,0 +1,105 @@
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 87vh;
+  margin: 0;
+  background-color: #3d3d3d;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 900px;
+  padding: 12px;
+  box-sizing: border-box;
+  max-height: 87vh; 
+}
+
+#topbar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  color: #f4f4f4;
+  margin-bottom: 12px;
+}
+
+#levelSelect{
+   max-width: 150px;
+   overflow: hidden;
+   text-overflow: ellipsis;
+}
+
+.controls-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#canvas-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  flex-grow: 1;
+}
+
+#levelSelect {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+canvas {
+  border: 2px solid #000;
+  background-color: #c2c2c2;
+  touch-action: none;
+  max-width: 100%;
+  max-height: 100%; 
+  height: auto;
+  display: block;
+}
+
+#dpad { display: none; flex-direction: column; align-items: center; gap: 6px; user-select: none; margin-top: 12px; }
+
+#dpad.dpad-visible {
+  display: flex;
+}
+
+#dpad .row {
+  display: flex;
+  gap: 6px;
+}
+
+.dbtn {
+  width: 62px;
+  height: 62px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: rgba(255,255,255,0.9);
+  font-size: 22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  touch-action: manipulation;
+}
+
+@media (max-height: 800px) and (min-aspect-ratio: 4/3) {
+  #game-container {
+    gap: 8px;
+    padding: 8px;
+  }
+  #topbar {
+    margin-bottom: 8px;
+  }
+  #dpad {
+    margin-top: 8px;
+  }
+}

@@ -1,0 +1,435 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/chessboard-0.3.0.min.css" />
+    <script src="js/jquery-1.10.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/chess.min.js"></script>
+    <script src="js/chessboard-0.3.0.min.js"></script>
+    <title>Chess</title>
+    <style>
+      h5, #evaluation { display: none; } 
+
+      body {
+        background-color: #f0f0f0;
+        margin: 0;
+        font-family: sans-serif;
+      }
+
+      .row {
+        margin-right: 0;
+        margin-left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 30px;
+        min-height: 87vh;
+      }
+
+      #pgn { height: 70px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; -webkit-overflow-scrolling: touch; width: 100%; box-sizing: border-box; }
+      
+      h4 {
+        font-size: 1.1em;
+        font-weight: bold;
+        margin-top: 0;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+
+      .btn-soft {
+        color: #333;
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .btn-soft:hover {
+        background-color: #e2e6ea;
+      }
+      
+      .game-controls {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        margin-top: 5px;
+      }
+
+      #engineStatus {
+        flex: 1;
+        min-width: 0;
+        overflow-wrap: break-word;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      .modal-overlay.is-visible {
+        display: flex;
+      }
+      .modal-content {
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        width: 90vw;
+        max-width: 315px;
+        max-height: 94vh;
+        overflow-y: auto;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 15px;
+        align-items: center;
+      }
+      .form-grid label {
+        font-weight: normal;
+        text-align: right;
+        margin: 0;
+      }
+      .form-grid .form-control, .form-grid .radio-group, .form-grid .fen-controls, .form-grid .move-controls {
+        width: 100%;
+      }
+      .form-grid .button-group {
+        grid-column: 2 / -1; /* Align with inputs */
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .form-grid .button-group .btn-soft {
+        flex: 1;
+      }
+      .form-grid .fen-controls, .form-grid .move-controls {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+      }
+      .form-grid .fen-controls .button-group, .form-grid .move-controls .button-group {
+          display: flex;
+          gap: 5px;
+          width: 100%;
+      }
+      .modal-footer {
+        margin-top: 20px;
+        text-align: right;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="row">
+
+      <div style="width: 95vw; max-width: 450px;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+          <div id="board" style="width: 100%;"></div>
+          <div class="game-controls">
+            <button id="toggleBtn" class="btn btn-soft" type="button">Menu</button>
+            <div id="engineStatus">...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="menuModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="form-grid">
+
+          <!-- "Action:" label removed -->
+          <label></label>
+          <div class="button-group">
+            <button type="button" class="btn btn-soft btn-sm" onclick="if(confirm('Restart for a new game?')) newGame()">New Game</button>
+            <button type="button" class="btn btn-soft btn-sm" onclick="game.undo()">Undo Move</button>
+          </div>
+
+          <label>Moves:</label>
+          <div id="pgn"></div>
+
+          <label for="moveNotation">Move:</label>
+          <div class="move-controls">
+            <div class="button-group">
+              <input type="text" class="form-control" id="moveNotation" placeholder="e.g., e4, nf3, O-O" />
+              <button type="button" class="btn btn-soft btn-sm" onclick="game.moveNotation()">Submit</button>
+            </div>
+          </div>
+
+          <label for="promote">Promote to:</label>
+          <select id="promote" class="form-control">
+            <option value=q selected>Queen</option>
+            <option value=r>Rook</option>
+            <option value=b>Bishop</option>
+            <option value=n>Knight</option>
+          </select>
+
+          <label for="skillLevel">Skill (0-20):</label>
+          <input type="number" class="form-control" id="skillLevel" value="0" min="0" max="20">
+
+          <label>Play as:</label>
+          <div class="radio-group">
+            <label class="radio-inline"><input type="radio" name="playerColor" value="white" checked> White</label>
+            <label class="radio-inline" style="margin-left:10px"><input type="radio" name="playerColor" value="black"> Black</label>
+          </div>
+
+          <label for="fen">FEN Position:</label>
+          <div class="fen-controls">
+             <div class="button-group">
+                <button type="button" class="btn btn-soft btn-sm" onclick="game.getFen()">Get</button>
+                <button type="button" class="btn btn-soft btn-sm" onclick="game.loadFen()">Load</button>
+            </div>
+            <input type="text" class="form-control" id="fen" />
+          </div>
+        </div>
+
+        <div class="modal-footer" style="border-top: none;">
+          <button type="button" style="margin-right: 25px;" class="btn btn-soft btn-sm" id="openPuzzleModalBtn">Puzzles</button>
+          <button id="closeModalBtn" class="btn btn-soft">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="puzzleModal" class="modal-overlay">
+      <div class="modal-content">
+        <h4>Checkmate in Two Moves</h4>
+        <select id="puzzleSelect" class="form-control" size="11" style="margin-bottom: 15px; width: 100%;"></select>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <button id="getBestMoveBtn" class="btn btn-soft" style="flex: 1;">Best Move</button>
+          <input type="text" id="bestMoveInput" class="form-control" style="flex: 2;" readonly placeholder="e.g., Nf7">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: space-between;">
+          <button id="shufflePuzzlesBtn" class="btn btn-soft" style="flex: 1;">Shuffle</button>
+          <button id="loadPuzzleBtn" class="btn btn-soft" style="flex: 1;">Start Puzzle</button>
+          <button id="closePuzzleModalBtn" class="btn btn-soft" style="flex: 1;">Close</button>
+        </div>
+      </div>
+    </div>
+
+<script src="game.js"></script>
+    <script>
+      var game;
+      var newGame = function (){};
+
+      $(document).ready(function() {
+        $('#board').on('contextmenu', function(e) { e.preventDefault(); });
+
+        let sessionPuzzles = null; // Cache for the random puzzle selection
+
+        const historicalPuzzles = [
+          { text: "Buckle vs NN, London, 1840", fen: "r2qkb1r/pp2nppp/3p4/2pNN1B1/2BnP3/3P4/PPP2PPP/R2bK2R w KQkq - 1 1" },
+          { text: "Paulsen vs Blachy, New York, 1857", fen: "1rb4r/pkPp3p/1b1P3n/1Q6/N3Pp2/8/P1P3PP/7K w - - 1 1" },
+          { text: "Morphy vs Isouard, Paris, 1858", fen: "4kb1r/p2n1ppp/4q3/4p1B1/4P3/1Q6/PPP2PPP/2KR4 w k - 1 1" },
+          { text: "Zukertort vs Anderssen, Breslau, 1865", fen: "r1b2k1r/ppp1bppp/8/1B1Q4/5q2/2P5/PPP2PPP/R3R1K1 w - - 1 1" },
+          { text: "Neumann vs Mayet, Berlin, 1866", fen: "5rkr/pp2Rp2/1b1p1Pb1/3P2Q1/2n3P1/2p5/P4P2/4R1K1 w - - 1 1" },
+          { text: "Blackburne vs Martin, England, 1876", fen: "1r1kr3/Nbppn1pp/1b6/8/6Q1/3B1P2/Pq3P1P/3RR1K1 w - - 1 1" },
+          { text: "Paulsen vs Anderssen, Frankfurt, 1878", fen: "5rk1/1p1q2bp/p2pN1p1/2pP2Bn/2P3P1/1P6/P4QKP/5R2 w - - 1 1" },
+          { text: "Blackburne vs Smith, Simul, 1882", fen: "r1nk3r/2b2ppp/p3b3/3NN3/Q2P3q/B2B4/P4PPP/4R1K1 w - - 1 1" },
+          { text: "Steinitz vs Sands, New York, 1887", fen: "r4br1/3b1kpp/1q1P4/1pp1RP1N/p7/6Q1/PPB3PP/2KR4 w - - 1 1" },
+          { text: "Steinitz vs Hodges, New York, 1891", fen: "r1b2k1r/ppppq3/5N1p/4P2Q/4PP2/1B6/PP5P/n2K2R1 w - - 1 1" },
+          { text: "Tarrasch vs Fiedler, Nuremberg, 1892", fen: "r2q1b1r/1pN1n1pp/p1n3k1/4Pb2/2BP4/8/PPP3PP/R1BQ1RK1 w - - 1 1" },
+          { text: "Pillsbury vs Rodgers, New York 1893", fen: "3q2r1/4n2k/p1p1rBpp/PpPpPp2/1P3P1Q/2P3R1/7P/1R5K w - - 1 1" },
+          { text: "Tarrasch vs Kurschner, Nuremberg, 1893", fen: "r2qk2r/pb4pp/1n2Pb2/2B2Q2/p1p5/2P5/2B2PPP/RN2R1K1 w - - 1 1" },
+          { text: "Teed vs Delmar, New York, 1896", fen: "rnbqkbn1/ppppp3/7r/6pp/3P1p2/3BP1B1/PPP2PPP/RN1QK1NR w - - 1 1" },
+          { text: "Steinitz vs Trenchard, Vienna, 1898", fen: "r2qrb2/p1pn1Qp1/1p4Nk/4PR2/3n4/7N/P5PP/R6K w - - 1 1" },
+          { text: "Nimzowitsch vs Neumann, Riga, 1899", fen: "r1b3nr/ppqk1Bbp/2pp4/4P1B1/3n4/3P4/PPP2QPP/R4RK1 w - - 1 1" },
+          { text: "Pillsbury vs Tinsley, London, 1899", fen: "3k1r1r/pb3p2/1p4p1/1B2B3/3qn3/6QP/P4RP1/2R3K1 w - - 1 1" },
+          { text: "Ryder vs NN, Leipzig, 1899", fen: "rn2kb1r/1pQbpppp/1p6/qp1N4/6n1/8/PPP3PP/2KR2NR w - - 1 1" },
+          { text: "Pulitzer vs Marco, Vienna, 1900", fen: "r2k2nr/pp1b1Q1p/2n4b/3N4/3q4/3P4/PPP3PP/4RR1K w - - 1 1" },
+          { text: "Lasker vs NN, Manchester, 1903", fen: "r2q2nr/5p1p/p1Bp3b/1p1NkP2/3pP1p1/2PP2P1/PP5P/R1Bb1RK1 w - - 1 1" },
+          { text: "Schwartz vs Samsonov, Heidelberg, 1908", fen: "r2q1k1r/ppp1bB1p/2np4/6N1/3PP1bP/8/PPP5/RNB2RK1 w - - 1 1" },
+          { text: "Rotlevi vs Suchting, Carlsbad, 1911", fen: "6k1/1p1r1pp1/p1r3b1/3pPqB1/2pP4/Q1P4R/P3P2K/6R1 w - - 1 1" },
+          { text: "Lasker vs Englund, Scheveningen, 1913", fen: "2kr1b1r/pp3ppp/2p1b2q/4B3/4Q3/2PB2R1/PPP2PPP/3R2K1 w - - 1 1" },
+          { text: "Teichmann vs NN, Berlin, 1914", fen: "rn2kb1r/pp3ppp/4p1qn/1p4B1/2B5/3P2QP/PPP2PP1/R3K2R w - - 1 1" },
+          { text: "Watson vs NN, Melbourne, 1916", fen: "rnb2b1r/p3kBp1/3pNn1p/2pQN3/1p2PP2/4B3/Pq5P/4K3 w - - 1 1" },
+          { text: "Brunnemer vs Patton, corr. USA, 1920", fen: "r1b1k2r/ppQ1q2n/2p2p2/P3p2p/N3P1pP/1B4P1/1PP2P2/3R1NK1 w - - 1 1" },
+          { text: "Tartakower vs Reti, Vienna, 1920", fen: "8/1r5p/kpQ3p1/p3rp2/P6P/8/4bPPK/1R6 w - - 1 1" },
+          { text: "Sery vs Vecsey, Brunn, 1921", fen: "r1b2rk1/2p2ppp/p7/1p6/3P3q/1BP3bP/PP3QP1/RNB1R1K1 w - - 1 1" },
+          { text: "Berger vs Froehlich, Graz, 1922", fen: "r2qkb1r/2p1nppp/p2p4/np1NN3/4P3/1BP5/PP1P1PPP/R1B1K2R w - - 1 1" },
+          { text: "Probst vs Lowig, Bad Oeynhausen, 1922", fen: "rnbkn2r/pppp1Qpp/5b2/3NN3/3Pp3/8/PPP1KP1P/R1B4q w - - 1 1" },
+          { text: "Steiner vs Becker, Vienna, 1923", fen: "4rk2/2pQn2p/p4p2/1p2pN1P/4q3/2P3R1/5PPK/8 w - - 1 1" },
+          { text: "Euwe vs Van Mindeno, Netherlands, 1927", fen: "r1b2rk1/pp3ppp/3p4/3Q1nq1/2B1R3/8/PP3PPP/R5K1 w - - 1 1" },
+          { text: "Springe vs Gebhard, Munich, 1927", fen: "r1b1kb1r/pp1n1pp1/1qp1p2p/6B1/2PPQ3/3B1N2/P4PPP/R4RK1 w - - 1 1" },
+          { text: "Vidmar vs Euwe, Carlsbad, 1929", fen: "6k1/5p2/1p5p/p4Np1/5q2/Q6P/PPr5/3R3K w - - 1 1" },
+          { text: "Winter vs Gemzoe, Folkestone, 1933", fen: "r3q3/ppp3k1/3p3R/5b2/2PR3Q/2P1PrP1/P7/4K3 w - - 1 1" },
+          { text: "Dake vs Cranston, Warsaw, 1935", fen: "r1bq2rk/pp3pbp/2p1p1pQ/7P/3P4/2PB1N2/PP3PPR/2KR4 w - - 1 1" },
+          { text: "Luckis vs Czerniak, Warsaw, 1935", fen: "k1n3rr/Pp3p2/3q4/3N4/3Pp2p/1Q2P1p1/3B1PP1/R4RK1 w - - 1 1" },
+          { text: "Kostic vs Keres, Stockholm, 1937", fen: "r1bq3r/ppp1b1kp/2n3p1/3B3Q/3p4/8/PPP2PPP/RNB2RK1 w - - 1 1" },
+          { text: "Alekhine vs Fahardo, Montevideo, 1939", fen: "4r3/pbpn2n1/1p1prp1k/8/2PP2PB/P5N1/2B2R1P/R5K1 w - - 1 1" },
+          { text: "Petrov vs Cordova, Buenos Aires, 1939", fen: "1q5r/1b1r1p1k/2p1pPpb/p1Pp4/3B1P1Q/1P4P1/P4KB1/2RR4 w - - 1 1" },
+          { text: "Pleci vs Endzelins, Buenos Aires, 1939", fen: "r4R2/1b2n1pp/p2Np1k1/1pn5/4pP1P/8/PPP1B1P1/2K4R w - - 1 1" },
+          { text: "Helms vs Tenner, New York, 1942", fen: "r1bqk2r/bppp1ppp/8/PB2N3/3n4/B7/2PPQnPP/RN2K2R w KQkq - 1 1" },
+          { text: "Bisguier vs Penrose, Southsea, 1950", fen: "r4r1k/2qb3p/p2p1p2/1pnPN3/2p1Pn2/2P1N3/PPB1QPR1/6RK w - - 1 1" },
+          { text: "Benko vs Gereben, Budapest, 1954", fen: "1r2q3/1R6/3p1kp1/1ppBp1b1/p3Pp2/2PP4/PP3P2/5K1Q w - - 1 1" },
+          { text: "Bennsdorf vs Krepp, corr., 1954", fen: "r3kb1r/pb6/2p2p1p/1p2pq2/2pQ3p/2N2B2/PP3PPP/3RR1K1 w - - 1 1" },
+          { text: "Najdorf vs Kalkstein, Montevideo, 1954", fen: "4r3/2q1rpk1/p3bN1p/2p3p1/4QP2/2N4P/PP4P1/5RK1 w - - 1 1" },
+          { text: "Kholmov vs Kliavinsh, Vilnius, 1955", fen: "r5rk/pp1np1bn/2pp2q1/3P1bN1/2P1N2Q/1P6/PB2PPBP/3R1RK1 w - - 1 1" },
+          { text: "Troianescu vs Lhagvasuren, Ulan Bator, 1956", fen: "rn1qkb1r/4p2p/2p2nN1/p4p1Q/PpBP4/8/1P3PPP/R1B1K2R w - - 1 1" },
+          { text: "Posch vs Derr, Vienna, 1958", fen: "r1b2rk1/ppppbpp1/7p/4R3/6Qq/2BB4/PPP2PPP/R5K1 w - - 1 1" },
+          { text: "Tal vs Benko, Bled, 1959", fen: "1r3k2/2n1p1b1/3p2QR/p1pq1pN1/bp6/7P/2P2PP1/4RBK1 w - - 1 1" },
+        ];
+
+        function populatePuzzleList() {
+            const puzzleSelect = $('#puzzleSelect');
+            puzzleSelect.empty(); // Clear current options
+
+            // Add the randomly selected puzzles first
+            if (sessionPuzzles) {
+                const randomGroup = $('<optgroup label="Random Puzzles"></optgroup>');
+                sessionPuzzles.forEach(function(puzzle) {
+                    randomGroup.append($('<option>', { value: puzzle.fen, text: puzzle.text }));
+                });
+                puzzleSelect.append(randomGroup);
+            }
+
+            const historicalGroup = $('<optgroup label="Historical Games"></optgroup>');
+            historicalPuzzles.forEach(function(puzzle) {
+                historicalGroup.append($('<option>', { value: puzzle.fen, text: puzzle.text }));
+            });
+            puzzleSelect.append(historicalGroup);
+        }
+
+        function loadAndDisplayPuzzles(forceRefresh = false) {
+            // If puzzles are already cached and we are not forcing a refresh, do nothing.
+            if (sessionPuzzles && !forceRefresh) {
+                return;
+            }
+
+            fetch('puzzles.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(allPuzzles => {
+                    const shuffled = allPuzzles.sort(() => 0.5 - Math.random());
+                    sessionPuzzles = shuffled.slice(0, 50);
+                    populatePuzzleList();
+                })
+                .catch(error => {
+                    console.error('Failed to load puzzles:', error);
+                    sessionPuzzles = null; 
+                    populatePuzzleList();
+                });
+        }
+
+        // Modal visibility controls
+        $('#toggleBtn').on('click', function() {
+          $('#menuModal').addClass('is-visible');
+        });
+
+        $('#closeModalBtn').on('click', function() {
+          $('#menuModal').removeClass('is-visible');
+        });
+
+        $('#menuModal').on('click', function(e) {
+          if (e.target === this) {
+            $(this).removeClass('is-visible');
+          }
+        });
+
+        $('#getBestMoveBtn').on('click', function() {
+          const currentFen = game.getCurrentFen();
+          if (currentFen) {
+            $('#bestMoveInput').val('...');
+            game.getBestMove(currentFen, function(san) {
+              $('#bestMoveInput').val(san);
+            });
+          }
+        });
+
+        // Puzzle Modal visibility and data loading
+        $('#openPuzzleModalBtn').on('click', function() {
+          loadAndDisplayPuzzles(); // Load puzzles on first open
+          $('#puzzleModal').addClass('is-visible');
+        });
+        
+        $('#shufflePuzzlesBtn').on('click', function() {
+          loadAndDisplayPuzzles(true); // Force a refresh
+        });
+
+        $('#closePuzzleModalBtn').on('click', function() {
+          $('#puzzleModal').removeClass('is-visible');
+        });
+    
+        $('#puzzleModal').on('click', function(e) {
+          if (e.target === this) {
+            $(this).removeClass('is-visible');
+          }
+        });
+
+        $('#loadPuzzleBtn').on('click', function() {
+          const selectedFen = $('#puzzleSelect').val();
+          if (selectedFen) {
+            game.loadPuzzle(selectedFen);
+            $('#puzzleModal').removeClass('is-visible');
+            $('#menuModal').removeClass('is-visible');
+          }
+        });
+      });
+
+      function setupGame() {
+        newGame = function newGame() {
+            var skill = parseInt($('#skillLevel').val());
+            var color = $('input[name="playerColor"]:checked').val();
+            game.reset();
+            game.setSkillLevel(skill);
+            game.setPlayerColor(color);
+            game.setDisplayScore(false);
+            game.start();
+            $('#menuModal').removeClass('is-visible');
+        }
+
+        try {
+           const savedGameJSON = localStorage.getItem('savedChessGame');
+           if (savedGameJSON) {
+              const savedGame = JSON.parse(savedGameJSON);
+              console.log("Found saved game. Restoring...");
+              $('#skillLevel').val(savedGame.skillLevel);
+              $('input[name="playerColor"][value="' + savedGame.playerColor + '"]').prop('checked', true);
+              game.resumeGame(savedGame);
+            } else {
+               newGame();
+            }
+          } catch (e) {
+             console.error("Could not load game from localStorage.", e);
+             newGame();
+          }
+      }
+
+      function initializeEngine() {
+        var workerTimeout;
+        var engineReady = false;
+
+        console.warn("Using asm.js version of chess engine.");
+        var script_tag = document.createElement("script");
+        script_tag.type = "text/javascript";
+        script_tag.src = "stockfish.asm.js";
+        script_tag.onload = function() {
+            game = engineGame();
+            setupGame();
+        };
+        document.getElementsByTagName("head")[0].appendChild(script_tag);
+        return;
+      }
+
+      document.addEventListener("DOMContentLoaded", initializeEngine);
+    </script>
+  </body>
+</html>
