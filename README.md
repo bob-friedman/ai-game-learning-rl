@@ -30,8 +30,6 @@ Chess v1 includes both historical and computationally curated puzzle sets. The c
 #### Screenshots
 
 ![Chess Screenshot 1](docs/images/screenshot_1_chess.png)
-![Chess Screenshot 2](docs/images/screenshot_2_chess.png)
-![Chess Screenshot 3](docs/images/screenshot_3_chess.png)
 
 ### Boxes
 
