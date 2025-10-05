@@ -5,7 +5,7 @@ const TILE_SIZE = 42;
 const MOVE_ANIM_MS = 150;
 const BOB_AMPLITUDE = 2.5;
 const BOB_FREQ = 0.014;
-const PRE_RENDER_SCALE = 3; // Scale factor for crisp sprites
+const PRE_RENDER_SCALE = 3;
 
 // ---------------------- DOM ----------------------
 const canvas = document.getElementById('gameCanvas');
