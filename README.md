@@ -1,6 +1,7 @@
 # Open Source Games for Reinforcement Learning
 
 This repository contains a collection of open-source games designed for use in reinforcement learning (RL) research and development. The games provide diverse environments for training and testing AI agents, with a focus on strategic thinking, puzzle-solving, and tactical gameplay.
+Both of the currently available games are open source, which allows for adaptation for the generation of data that is used in training an AI model by the methods of reinforcement learning.
 
 ## Games
 
