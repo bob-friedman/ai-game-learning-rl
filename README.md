@@ -22,7 +22,7 @@ This web browser version of Chess supports both desktop and mobile devices. On s
 
 The puzzles in Chess are for delivering checkmate in two moves. First, find the key move that initiates the checkmating sequence, and the AI will respond with its best possible defense. Then deliver the final checkmating move. This is a traditional exercise designed to sharpen one's tactical vision. For a hint, a *best move* option is available in the puzzles section.
 
-Chess v1 includes both historical and computationally curated puzzle sets. The curated set of 1,180 puzzles originated from a set of 329,951 chess positions as derived the Lichess database (theme: mateIn2), and depended on a validation step against the Stockfish v17 engine (see scripts/ in this archive).
+Chess includes both historical and computationally curated puzzle sets. The curated set of 1,180 puzzles originated from a set of 329,951 chess positions as derived the Lichess database (theme: mateIn2), and depended on a validation step against the Stockfish v17 engine (see scripts/ in this archive).
 
 #### Sources of Data
 
@@ -93,6 +93,4 @@ The Boxes game logic is contained in `boxes/boxes.js`. The game state is managed
 
 ## Contributors
 
-This project was developed by a team of dedicated individuals. We are grateful to all our contributors for their hard work and commitment.
-
-If you would like to contribute to this project, please follow the guidelines in our contributing documentation.
+The development of the software and code benefited significantly from discussions and iterative refinement with an AI language model, Gemini 2.5 Pro (Google). The author oversaw and reviewed the accuracy and robustness of all parts of its development.
