@@ -65,3 +65,34 @@ git clone https://github.com/bob-friedman/ai-game-learning-rl.git
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
+
+## Data Retrieval Entry Points
+
+The games in this repository are designed to be transparent and accessible for AI research. The following sections detail the primary functions and variables that can be used to extract game state, history, and other relevant data for training reinforcement learning models.
+
+### Chess
+
+The core logic for the Chess game is located in `chess/game.js`. The `engineGame` object provides several methods to access game data:
+
+-   **`game.fen()`**: Returns the Forsyth-Edwards Notation (FEN) string, which describes the current board state in a single line of text. This is ideal for capturing a snapshot of the board at any given moment.
+-   **`game.pgn()`**: Returns the Portable Game Notation (PGN) string, which provides a complete record of the moves played in the current game. This is useful for analyzing entire game sequences.
+-   **`get_moves()`**: This function returns a space-separated string of all moves made in the current game, which can be useful for move analysis.
+-   **`localStorage.getItem('savedChessGame')`**: The game automatically saves the current state to the browser's local storage. This JSON object contains the FEN string, the player's color, and the AI's skill level, allowing for game resumption and data extraction.
+-   **`loadPuzzle(fen)`**: This function allows you to load a specific board position using a FEN string, which is useful for setting up specific scenarios for an AI agent to solve.
+
+### Boxes
+
+The Boxes game logic is contained in `boxes/boxes.js`. The game state is managed through several key JavaScript variables:
+
+-   **`board`**: A 2D array representing the static layout of the level, including walls and floor tiles.
+-   **`player`**: An object containing the player's current `x` and `y` coordinates.
+-   **`boxes`**: An array of objects, where each object represents a box and its `x` and `y` coordinates.
+-   **`goals`**: An array of objects that stores the `x` and `y` coordinates of the goal locations.
+-   **`undoStack`**: This array stores a history of previous game states. Each element in the stack is an object containing the player and box positions for a prior move, making it an excellent source for sequential training data.
+-   **`parseSokobanLevels(text)`**: This function can be used to load custom level data in the Sokoban format, allowing for the creation of new and varied training environments.
+
+## Contributors
+
+This project was developed by a team of dedicated individuals. We are grateful to all our contributors for their hard work and commitment.
+
+If you would like to contribute to this project, please follow the guidelines in our contributing documentation.
