@@ -1,6 +1,6 @@
 # Open Source Games for Reinforcement Learning
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17273373.svg)](https://doi.org/10.5281/zenodo.17273373)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17273372.svg)](https://doi.org/10.5281/zenodo.17273372)
 
 This repository has a collection of open-source games designed for use in reinforcement learning (RL) research and development. The games provide diverse environments for training and testing AI agents, with a focus on strategic thinking, puzzle-solving, and tactical gameplay. These features allow for adaptation for the generation of data that is used in training an AI model by the methods of reinforcement learning.
 
