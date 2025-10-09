@@ -8,30 +8,34 @@ function engineGame(options) {
     var time = {};
     var playerColor = 'white';
     var isEngineRunning = false;
-    var announced_game_over;
 
+    var engineStatus = {
+        engineLoaded: false,
+        engineReady: false,
+        search: null,
+        score: null,
+        pv: null
+    };
+
+    var isDisplayThrottled = false;
+    function throttledDisplayStatus() {
+        if (!isDisplayThrottled) {
+            displayStatus();
+            isDisplayThrottled = true;
+            setTimeout(function() {
+                isDisplayThrottled = false;
+            }, 250);
+        }
+    }
     var onDragStart = function(source, piece, position, orientation) {
-        if (game.game_over() === true ||
+        if (game.game_over() || isEngineRunning ||
             (game.turn() === 'w' && playerColor !== 'white') ||
             (game.turn() === 'b' && playerColor !== 'black')) {
             return false;
         }
     };
 
-    setInterval(function ()
-    {
-        if (announced_game_over) {
-            return;
-        }
-        
-        if (game.game_over()) {
-            announced_game_over = true;
-        }
-    }, 1000);
-
     function uciCmd(cmd, which) {
-        console.log("UCI: " + cmd);
-        
         (which || engine).postMessage(cmd);
     }
     uciCmd('uci');
@@ -61,7 +65,7 @@ function engineGame(options) {
         var gameStatusText = '';
         if (game.game_over()) {
             if (game.in_checkmate()) {
-                gameStatusText = 'Checkmate!';
+               gameStatusText = 'Checkmate!';
             } else if (game.in_stalemate()) {
                gameStatusText = 'Stalemate.';
             } else if (game.in_threefold_repetition()) {
@@ -80,33 +84,7 @@ function engineGame(options) {
         $('#engineStatus').html(status + ' ' + gameStatusText + turnStatus);
     }
 
-    function get_moves()
-    {
-        var moves = '';
-        var history = game.history({verbose: true});
-        
-        for(var i = 0; i < history.length; ++i) {
-            var move = history[i];
-            moves += ' ' + move.from + move.to + (move.promotion ? move.promotion : '');
-        }
-        
-        return moves;
-    }
-
-    function prepareMove() {
-        $('#pgn').text(game.pgn());
-        setTimeout(function() { document.getElementById('pgn').scrollTop = 9999; });
-        board.position(game.fen());
-        displayStatus();
-        var turn = game.turn() == 'w' ? 'white' : 'black';
-        if(!game.game_over()) {
-            if(turn != playerColor) {
-                $('button[onclick="game.undo()"]').prop('disabled', true);
-                uciCmd('position fen ' + game.fen());
-                uciCmd("go " + (time.movetime ? "movetime " + time.movetime : ""));
-                isEngineRunning = true;
-            }
-        }
+    function saveGameState() {
         try {
             if (!game.game_over()) {
                 const gameState = {
@@ -122,28 +100,42 @@ function engineGame(options) {
             console.error("Could not save game to localStorage.", e);
         }
     }
+
+    function prepareMove() {
+        $('#pgn').text(game.pgn());
+        $('#pgn').scrollTop($('#pgn')[0].scrollHeight);
+        board.position(game.fen());
+        displayStatus();
+
+        var turn = game.turn() == 'w' ? 'white' : 'black';
+        if(!game.game_over()) {
+            if(turn != playerColor) {
+                setTimeout(function() {
+                    $('button[onclick="game.undo()"]').prop('disabled', true);
+                    var goCommand = "go";
+                    if (time.depth) goCommand += " depth " + time.depth;
+                    else if (time.movetime) goCommand += " movetime " + time.movetime;
+                
+                    uciCmd('position fen ' + game.fen());
+                    uciCmd(goCommand);
+                    isEngineRunning = true;
+                }, 2000);
+            }
+        }
+    }
     
     engine.onmessage = function(event) {
-        var line;
-        
-        if (event && typeof event === "object") {
-            line = event.data;
-        } else {
-            line = event;
-        }
-        console.log("Reply: " + line)
-        if(line == 'uciok') {
+        var line = event.data || event;
+        if (line === 'uciok') {
             engineStatus.engineLoaded = true;
-               if (typeof options.onReady === 'function') {
-                   options.onReady();
-               }
-        } else if(line == 'readyok') {
+            if (typeof options.onReady === 'function') options.onReady();
+        } else if (line === 'readyok') {
             engineStatus.engineReady = true;
         } else {
-            var match = line.match(/^bestmove ([a-h][1-8])([a-h][1-8])([qrbn])?/);
-            if(match) {
+            var match;
+            if (match = line.match(/^bestmove ([a-h][1-8])([a-h][1-8])([qrbn])?/)) {
                 isEngineRunning = false;
-                var move = {from: match[1], to: match[2], promotion: match[3]};
+                var move = { from: match[1], to: match[2], promotion: match[3] };
 
                 if (typeof onBestMoveCallback === 'function') {
                     onBestMoveCallback(move);
@@ -153,26 +145,21 @@ function engineGame(options) {
 
                 $('button[onclick="game.undo()"]').prop('disabled', false);
                 game.move(move);
-                if (game.in_check()) { $('#engineStatus').text('Check!'); }
                 prepareMove();
-            } else if (match = line.match(/^info .*\bdepth (\d+) .*\bnps (\d+)/)) {
-                engineStatus.search = 'Depth: ' + match[1] + ' Nps: ' + match[2];
-            }
-            
-            if(match = line.match(/^info .*\bscore (\w+) (-?\d+)/)) {
-                var score = parseInt(match[2]) * (game.turn() == 'w' ? 1 : -1);
-                if(match[1] == 'cp') {
-                    engineStatus.score = (score / 100.0).toFixed(2);
-                } else if(match[1] == 'mate') {
-                    engineStatus.score = 'Checkmate in ' + Math.abs(score);
+            } else if (match = line.match(/^info .*/)) {
+                if (match = line.match(/depth (\d+) .* nps (\d+)/)) {
+                    engineStatus.search = 'Depth: ' + match[1] + ' Nps: ' + match[2];
                 }
-                
-                if(match = line.match(/\b(upper|lower)bound\b/)) {
-                    engineStatus.score = ((match[1] == 'upper') == (game.turn() == 'w') ? '<= ' : '>= ') + engineStatus.score;
+                if (match = line.match(/score (\w+) (-?\d+)/)) {
+                    var score = parseInt(match[2]) * (game.turn() === 'w' ? 1 : -1);
+                    if (match[1] === 'cp') {
+                        engineStatus.score = (score / 100.0).toFixed(2);
+                    } else if (match[1] === 'mate') {
+                        engineStatus.score = 'Checkmate in ' + Math.abs(score);
+                    }
                 }
-                if (match = line.match(/\bpv\s([a-h][1-8][a-h][1-8][qrbn]?)/)) {
-                    engineStatus.pv = match[1];
-                }
+                throttledDisplayStatus();
+                return;
             }
         }
         displayStatus();
@@ -196,30 +183,26 @@ function engineGame(options) {
 
         if (move === null) return 'snapback';
 
+        saveGameState();
         prepareMove();
     };
 
-    var onSnapEnd = function() {
-        board.position(game.fen());
-    };
+    var onSnapEnd = function() { board.position(game.fen()); };
 
-    var cfg = {
-        showErrors: true,
-        draggable: true,
-        position: 'start',
-        onDragStart: onDragStart,
-        onDrop: onDrop,
-        onSnapEnd: onSnapEnd
-    };
-
+    var cfg = { draggable: true, position: 'start', onDragStart, onDrop, onSnapEnd };
     board = new ChessBoard('board', cfg);
 
     return {
         reset: function() {
             game.reset();
-           localStorage.removeItem('savedChessGame');
-            uciCmd('setoption name Contempt value 0');
+            board.position('start');
+            localStorage.removeItem('savedChessGame');
+            uciCmd('ucinewgame');
+            uciCmd('isready');
+            engineStatus.engineReady = false;
+            engineStatus.search = null;
             this.setSkillLevel(0);
+            prepareMove();
         },
         loadPgn: function(pgn) { game.load_pgn(pgn); },
         setPlayerColor: function(color) {
@@ -227,58 +210,25 @@ function engineGame(options) {
             board.orientation(playerColor);
         },
         setSkillLevel: function(skill) {
-            var max_err,
-                err_prob;
-            
-            skill = parseInt(skill);
-            if (skill < 0) {
-                skill = 0;
-            }
-            if (skill > 20) {
-                skill = 20;
-            }
-            
+            skill = Math.max(0, Math.min(20, parseInt(skill, 10)));
             time.level = skill;
-            
-            time.movetime = 500 + (skill * 200);
-            
+            $('#skillLevel').val(skill);
             uciCmd('setoption name Skill Level value ' + skill);
-            
-            err_prob = Math.round((skill * 6.35) + 1);
-            max_err = Math.round((skill * -0.5) + 10);
-            
-            uciCmd('setoption name Skill Level Maximum Error value ' + max_err);
-            uciCmd('setoption name Skill Level Probability value ' + err_prob);
-        },
-        setDepth: function(depth) {
-            time = { depth: depth };
-        },
-        setNodes: function(nodes) {
-            time = { nodes: nodes };
-        },
-        setContempt: function(contempt) {
-            uciCmd('setoption name Contempt value ' + contempt);
-        },
-        setAggressiveness: function(value) {
-            uciCmd('setoption name Aggressiveness value ' + value);
-        },
-        setDisplayScore: function(flag) {
-            displayScore = flag;
-            displayStatus();
+
+            delete time.depth;
+            delete time.movetime;
+
+            if (skill <= 5) {
+                time.depth = skill > 0 ? skill : 1;
+            } else {
+                time.movetime = 100 + (skill * 150);
+            }
         },
         start: function() {
-            uciCmd('ucinewgame');
-            uciCmd('isready');
-            engineStatus.engineReady = false;
-            engineStatus.search = null;
-            displayStatus();
-            prepareMove();
-            announced_game_over = false;
+            this.reset();
         },
         undo: function() {
-            if (game.history().length === 0) return false;
-            if(isEngineRunning)
-                return false;
+            if (isEngineRunning || game.history().length < 2) return false;
             game.undo();
             game.undo();
             engineStatus.search = null;
@@ -288,28 +238,31 @@ function engineGame(options) {
         },
         getFen: function() {
             var fenInput = document.getElementById('fen');
-            if (fenInput) {
-                fenInput.value = game.fen();
-            }
+            if (fenInput) { fenInput.value = game.fen(); }
         },
         loadFen: function() {
             var fenString = document.getElementById('fen').value;
             if (game.load(fenString)) {
                 $('#pgn').text(game.pgn());
                 board.position(game.fen());
+                displayStatus();
                 var turn = game.turn() == 'w' ? 'white' : 'black';
                 if (!game.game_over()) {
                     if (turn != playerColor) {
                         $('button[onclick="game.undo()"]').prop('disabled', true);
+                        var goCommand = "go";
+                        if (time.depth) goCommand += " depth " + time.depth;
+                        else if (time.movetime) goCommand += " movetime " + time.movetime;
                         uciCmd('position fen ' + game.fen());
-                        uciCmd("go " + (time.movetime ? "movetime " + time.movetime : ""));
+                        uciCmd(goCommand);
                         isEngineRunning = true;
                     }
                 }
             } else {
+                var originalStatus = $('#engineStatus').html();
                 $('#engineStatus').html('Invalid FEN string.');
                 setTimeout(function () {
-                    displayStatus();
+                    $('#engineStatus').html(originalStatus);
                 }, 4000);
             }
         },
@@ -323,7 +276,6 @@ function engineGame(options) {
 
             for (var i = 0; i < legalMoves.length; i++) {
                 var sanitizedMove = legalMoves[i].replace(/[+#=x]/g, '').toLowerCase();
-                
                 if (sanitizedMove === moveString) {
                     foundMove = legalMoves[i];
                     break;
@@ -331,8 +283,9 @@ function engineGame(options) {
             }
 
             if (foundMove && game.move(foundMove)) {
+                saveGameState();
                 prepareMove();
-                moveInput.value = ''; // Clear input on successful move
+                moveInput.value = '';
             } else {
                 var originalStatus = $('#engineStatus').html();
                 $('#engineStatus').html('Invalid move: ' + moveInput.value.trim());
@@ -348,13 +301,11 @@ function engineGame(options) {
             this.setSkillLevel(savedState.skillLevel);
             board.position(game.fen());
             $('#pgn').text(game.pgn());
-            setTimeout(function() { document.getElementById('pgn').scrollTop = 9999; });
+            $('#pgn').scrollTop($('#pgn')[0].scrollHeight);
             var turn = game.turn() == 'w' ? 'white' : 'black';
             if (!game.game_over()) {
                 if (turn != playerColor) {
-                    uciCmd('position fen ' + game.fen());
-                    uciCmd("go " + (time.movetime ? "movetime " + time.movetime : ""));
-                    isEngineRunning = true;
+                    prepareMove();
                 }
             }
             displayStatus();
@@ -365,14 +316,17 @@ function engineGame(options) {
             board.position(fen);
             var turn = game.turn() === 'w' ? 'white' : 'black';
             this.setPlayerColor(turn);
-            // Add this line to update the UI radio button
             $('input[name="playerColor"][value="' + turn + '"]').prop('checked', true);
-            this.setSkillLevel(20);
+    
+            time.level = 20;
+            uciCmd('setoption name Skill Level value 20');
+            delete time.depth;
+            time.movetime = 100 + (20 * 150);
+  
             uciCmd('ucinewgame');
             uciCmd('position fen ' + fen);
             $('#pgn').text('');
             displayStatus();
-            announced_game_over = false;
         },
         getCurrentFen: function() {
             return game.fen();
@@ -381,9 +335,7 @@ function engineGame(options) {
             onBestMoveCallback = function(move) {
                 var tempGame = new Chess(fen);
                 var moveResult = tempGame.move(move);
-                if (moveResult) {
-                    callback(moveResult.san);
-                }
+                if (moveResult) { callback(moveResult.san); }
             };
             uciCmd('position fen ' + fen);
             uciCmd('go movetime 3000');
