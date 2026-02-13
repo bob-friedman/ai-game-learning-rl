@@ -56,8 +56,6 @@ Boxes supports multiple control schemes to accommodate different platforms and p
 
 ### Grid Combat
 
-![Grid Combat Icon](docs/images/icon_grid_combat.png)
-
 This browser-based tactical strategy game pits two futuristic military factions—Stellar Command and the Lunar Directorate—against each other on grid-based battlefields filled with diverse terrain. Players command a variety of units including infantry, tanks, mechanized walkers, heavy armor, artillery, and rocket launchers, each possessing unique movement ranges, vision capabilities, and combat statistics that interact dynamically with environmental factors like woods, mountains, roads, and water obstacles. The gameplay emphasizes positional strategy and resource management, with units unable to move through certain terrain and defensive bonuses varying by location, while specialized infantry units serve as the only forces capable of capturing enemy headquarters to achieve victory.
 
 The turn-based combat system features direct engagements where attackers exchange fire with defenders unless utilizing ranged artillery that can strike from a distance without retaliation. An AI opponent automatically maneuvers the enemy forces during their turn, seeking optimal paths toward capture points and engaging vulnerable targets. The game includes multiple handcrafted scenarios such as Border Clash, Siege, and River Crossing that present unique tactical puzzles, alongside partially randomized skirmish modes that create partially randomized maps with natural chokepoints and strategic crossings. Visual feedback remains clear through color-coded team indicators, terrain characters, and highlighted movement ranges, while an information panel displays statistics about unit health, terrain defense modifiers, and capture progress.
@@ -101,7 +99,7 @@ Grid Combat prioritizes positional calculation over reflexes. Victory is from re
 
 #### Screenshot
 
-![Grid Combat Screenshot 1](docs/images/screenshot_1_grid_combat.png)
+![Grid Combat Screenshot 1](docs/images/icon_grid_combat.png)
 
 ## Installation
 
