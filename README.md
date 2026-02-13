@@ -62,7 +62,7 @@ This browser-based tactical strategy game pits two futuristic military factions�
 
 The turn-based combat system features direct engagements where attackers exchange fire with defenders unless utilizing ranged artillery that can strike from a distance without retaliation. An AI opponent automatically maneuvers the enemy forces during their turn, seeking optimal paths toward capture points and engaging vulnerable targets. The game includes multiple handcrafted scenarios such as Border Clash, Siege, and River Crossing that present unique tactical puzzles, alongside partially randomized skirmish modes that create partially randomized maps with natural chokepoints and strategic crossings. Visual feedback remains clear through color-coded team indicators, terrain characters, and highlighted movement ranges, while an information panel displays statistics about unit health, terrain defense modifiers, and capture progress.
 
-The gameplay mechanics and combat units are inspired by Advance Wars and clones. The user interface is designed for desktop use, but it has limited touchscreen support for tablets with large displays.
+The gameplay mechanics and combat units are inspired by Advance Wars and clones. The user interface is designed for a mouse and desktop monitor, but it has limited touchscreen support for tablets with a large display.
 
 #### Gameplay
 
@@ -91,13 +91,7 @@ Randomized maps are generated based on basic templates of fixed geography for va
 - **Lake Crossing (16×14)**: Flanking routes, 11 units per side.
 - **Mountain Frontier (20×16)**: Central mountain spine, a few approach vectors, 12 units per side.
 
-Every skirmish guarantees a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes.
-
-Units can path through friendly forces but cannot end movement on occupied tiles. This creates traffic management decisions: do you block an enemy advance with a Tank, or keep the road clear for a Heavy Tank next turn?
-
-#### Design Philosophy
-
-Grid Combat prioritizes positional calculation over reflexes. Victory is from reading the board state, predicting 2-3 turns in advance, and executing moves without error. The reduced movement ranges (2-3 for most units) constrains the battlefield in favor of tactical combat, while the capture point system rewards sustained commitment over blitz tactics. In addition, the AI subsystem is prioritized as an essential component for fairness and as an ideal competitor on this virtual and abstract battlefield.
+Every skirmish guarantees a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes. Units can path through friendly forces but cannot end movement on occupied tiles. This creates traffic management decisions: do you block an enemy advance with a Tank, or keep the road clear for a Heavy Tank next turn?
 
 #### Screenshot
 
