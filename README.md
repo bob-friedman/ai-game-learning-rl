@@ -54,6 +54,55 @@ Boxes supports multiple control schemes to accommodate different platforms and p
 
 ![Boxes Screenshot](docs/images/screenshot_1_boxes.png)
 
+### Grid Combat
+
+![Grid Combat Icon](docs/images/icon_grid_combat.png)
+
+This browser-based tactical strategy game pits two futuristic military factions—Stellar Command and the Lunar Directorate—against each other on grid-based battlefields filled with diverse terrain. Players command a variety of units including infantry, tanks, mechanized walkers, heavy armor, artillery, and rocket launchers, each possessing unique movement ranges, vision capabilities, and combat statistics that interact dynamically with environmental factors like woods, mountains, roads, and water obstacles. The gameplay emphasizes positional strategy and resource management, with units unable to move through certain terrain and defensive bonuses varying by location, while specialized infantry units serve as the only forces capable of capturing enemy headquarters to achieve victory.
+
+The turn-based combat system features direct engagements where attackers exchange fire with defenders unless utilizing ranged artillery that can strike from a distance without retaliation. An AI opponent automatically maneuvers the enemy forces during their turn, seeking optimal paths toward capture points and engaging vulnerable targets. The game includes multiple handcrafted scenarios such as Border Clash, Siege, and River Crossing that present unique tactical puzzles, alongside partially randomized skirmish modes that create partially randomized maps with natural chokepoints and strategic crossings. Visual feedback remains clear through color-coded team indicators, terrain characters, and highlighted movement ranges, while an information panel displays statistics about unit health, terrain defense modifiers, and capture progress.
+
+The gameplay mechanics and combat units are inspired by Advance Wars and clones. The user interface is designed for desktop use, but it has limited touchscreen support for tablets with large displays.
+
+#### Gameplay
+
+Each turn, command your units in any order. Units have two fundamental states: move/attack and acted this turn. Plan carefully since there is no undo after combat resolves, although movement can be reversed if a particular unit has not engaged yet.
+
+Combat Resolution:
+1. Attacker strikes first with scaled damage (HP × base damage × terrain defense).
+2. Defenders strike back if adjacent and not ranged themselves.
+3. Units at 0 HP are removed from battlefield.
+
+Ranged units (Artillery, Rocket) attack at distance without retaliation, but cannot move and fire in the same turn. Positioning them behind frontline units is essential.
+
+**Victory Condition: HQ Capture.**
+HQs require 20 capture points to seize. Each turn, capturing units contribute points equal to their current HP (max 10). A full-health Infantry or Mech needs 2 turns to capture; wounded units take longer. Only Infantry and Mech can capture. If both sides lose their capturing units, then a stalemate occurs.
+
+#### Scenarios
+
+**For Training**
+- **Border Clash**: Vertical river, single central bridge. Warfare at bottleneck regions.
+- **Siege**: Horizontal barrier with elevated HQs. Siegecraft and artillery positioning.
+- **River Crossing**: Diagonal water with one contested bridge. Timing and commitment.
+- **The Gauntlet**: Single narrow corridor. No flanking. Favors direct confrontation with enemy units.
+
+**For Skirmishes**
+Randomized maps are generated based on basic templates of fixed geography for variability in the gameplay. Randomization affects woods/plains distribution but rivers, bridges, and mountains remain fixed for a robust AI pathing in the map.
+- **Lake Crossing (16×14)**: Flanking routes, 11 units per side.
+- **Mountain Frontier (20×16)**: Central mountain spine, a few approach vectors, 12 units per side.
+
+Every skirmish guarantees a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes.
+
+Units can path through friendly forces but cannot end movement on occupied tiles. This creates traffic management decisions: do you block an enemy advance with a Tank, or keep the road clear for a Heavy Tank next turn?
+
+#### Design Philosophy
+
+Grid Combat prioritizes positional calculation over reflexes. Victory is from reading the board state, predicting 2-3 turns in advance, and executing moves without error. The reduced movement ranges (2-3 for most units) constrains the battlefield in favor of tactical combat, while the capture point system rewards sustained commitment over blitz tactics. In addition, the AI subsystem is prioritized as an essential component for fairness and as an ideal competitor on this virtual and abstract battlefield.
+
+#### Screenshot
+
+![Grid Combat Screenshot 1](docs/images/screenshot_1_grid_combat.png)
+
 ## Installation
 
 To run the games locally, clone this repository and serve the directory chess/ or boxes/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
@@ -90,6 +139,19 @@ The Boxes game logic is contained in `boxes/boxes.js`. The game state is managed
 -   **`goals`**: An array of objects that stores the `x` and `y` coordinates of the goal locations.
 -   **`undoStack`**: This array stores a history of previous game states. Each element in the stack is an object containing the player and box positions for a prior move, making it an excellent source for sequential training data.
 -   **`parseSokobanLevels(text)`**: This function can be used to load custom level data in the Sokoban format, allowing for the creation of new and varied training environments.
+
+### Grid Combat
+
+The game logic for Grid Combat is contained in `grid-combat/grid-combat.js`. The following variables and functions can be used to extract game state and interact with the game:
+
+-   **`map`**: A 2D array of objects representing the terrain layout. Each object contains the terrain type and coordinates.
+-   **`units`**: An array of unit objects currently on the battlefield, including their type, position, HP, team, and status.
+-   **`structures`**: An array of structure objects (e.g., HQs), including their type, position, team, and capture progress.
+-   **`turn`**: An integer (0 or 1) indicating which team's turn it is (0: Stellar Command, 1: Lunar Directorate).
+-   **`actionHistory`**: An array of recent actions (moves and combat), useful for tracking the sequence of events in the current turn.
+-   **`loadScenario(scenarioId)`**: Loads a specific scenario or skirmish by its ID.
+-   **`endTurn()`**: Finalizes the current turn and switches to the other team.
+-   **`undoMove()`**: Reverts the last move made in the current turn, if no combat has occurred.
 
 ## Contributors
 
