@@ -93,9 +93,13 @@ Randomized maps are generated based on basic templates of fixed geography for va
 
 Every skirmish guarantees a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes. Units can path through friendly forces but cannot end movement on occupied tiles. This creates traffic management decisions: do you block an enemy advance with a Tank, or keep the road clear for a Heavy Tank next turn?
 
-#### Screenshot
+#### Screenshots
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
+
+![Grid Combat Screenshot 1](docs/images/screenshot_2_gridcombat.png)
+
+![Grid Combat Screenshot 1](docs/images/screenshot_3_gridcombat.png)
 
 ## Installation
 
