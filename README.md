@@ -87,19 +87,18 @@ HQs require 20 capture points to seize. Each turn, capturing units contribute po
 - **The Gauntlet**: Single narrow corridor. No flanking. Favors direct confrontation with enemy units.
 
 **For Skirmishes**
-Randomized maps are generated based on basic templates of fixed geography for variability in the gameplay. Randomization affects woods/plains distribution but rivers, bridges, and mountains remain fixed for a robust AI pathing in the map.
 - **Lake Crossing (16×14)**: Flanking routes, 11 units per side.
 - **Mountain Frontier (20×16)**: Central mountain spine, a few approach vectors, 12 units per side.
 
-Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes. Units can path through friendly forces but cannot end movement on occupied tiles. 
+Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes. These maps are generated based on basic templates of fixed geography for variability. Randomization affects woods/plains distribution but rivers, bridges, and mountains remain fixed for AI robustness. Also, in all scenarios the units can path through friendly forces but cannot end movement on occupied tiles.
 
 #### Screenshots
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
 
-![Grid Combat Screenshot 1](docs/images/screenshot_2_gridcombat.png)
+![Grid Combat Screenshot 2](docs/images/screenshot_2_gridcombat.png)
 
-![Grid Combat Screenshot 1](docs/images/screenshot_3_gridcombat.png)
+![Grid Combat Screenshot 3](docs/images/screenshot_3_gridcombat.png)
 
 ## Installation
 
