@@ -86,6 +86,12 @@ HQs require 20 capture points to seize. Each turn, capturing units contribute po
 - **River Crossing**: Diagonal water with one contested bridge. Timing and commitment.
 - **The Gauntlet**: Single narrow corridor. No flanking. Favors direct confrontation with enemy units.
 
+**Advanced**
+- **Border Clash - Advanced**: Enhanced forces with Rocket and Artillery support.
+- **Siege - Advanced**: Heavy Tank breakthroughs and coordinated artillery fire.
+- **River Crossing - Advanced**: Rocket ambushes at the bridgehead.
+- **The Gauntlet - Advanced**: Full roster engagement in a lethal corridor.
+
 **For Skirmishes**
 - **Lake Crossing (16×14)**: Flanking routes, 11 units per side.
 - **Mountain Frontier (20×16)**: Central mountain spine, a few approach vectors, 12 units per side.
