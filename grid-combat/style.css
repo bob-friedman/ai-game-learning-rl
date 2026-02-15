@@ -1,300 +1,333 @@
 body {
-  font-family: monospace;
-  background: #1a1a1a;
-  color: #ddd;
-  display: flex;
-  gap: 20px;
-  padding: 20px;
+    font-family: monospace;
+    background: #1a1a1a;
+    color: #ddd;
+    display: flex;
+    gap: 20px;
+    padding: 20px
 }
+
 #board {
-  display: grid;
-  gap: 1px;
+    display: grid;
+    gap: 1px
 }
+
 .cell {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  border: 1px solid #444;
-  position: relative;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    border: 1px solid #444;
+    position: relative
 }
+
 .cell:hover {
-  border-color: #fff;
-  z-index: 13;
+    border-color: #fff;
+    z-index: 13
 }
+
 .plain {
-  background: #5a6;
+    background: #5a6
 }
+
 .wood {
-  background: #373;
+    background: #373
 }
+
 .mountain {
-  background: #777;
+    background: #777
 }
+
 .road {
-  background: #975;
+    background: #975
 }
+
 .water {
-  background: #48a;
-  color: #8cf;
+    background: #48a;
+    color: #8cf
 }
+
 .terrain-char {
-  position: absolute;
-  color: rgba(0, 0, 0, 0.15);
-  font-size: 20px;
-  font-weight: 700;
-  pointer-events: none;
-  z-index: 0;
+    position: absolute;
+    color: rgba(0, 0, 0, .15);
+    font-size: 20px;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 0
 }
+
 .stellar {
-  color: gold !important;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000;
-  font-weight: 700;
+    color: gold !important;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    font-weight: 700
 }
+
 .lunar {
-  color: #4da6ff !important;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000;
-  font-weight: 700;
+    color: #4da6ff !important;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    font-weight: 700
 }
+
 .neutral {
-  color: #e0e0e0 !important;
-  text-shadow:
-    1px 1px 0 #000,
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000;
-  font-weight: 700;
+    color: #e0e0e0 !important;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    font-weight: 700
 }
+
 .cell.stellar-unit::after {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  width: 8px;
-  height: 8px;
-  background: #f90;
-  border: 1px solid #000;
-  border-radius: 2px;
-  z-index: 1;
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 8px;
+    height: 8px;
+    background: #f90;
+    border: 1px solid #000;
+    border-radius: 2px;
+    z-index: 1
 }
+
 .cell.lunar-unit::after {
-  content: "";
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  width: 8px;
-  height: 8px;
-  background: #09f;
-  border: 1px solid #000;
-  border-radius: 2px;
-  z-index: 1;
+    content: "";
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 8px;
+    height: 8px;
+    background: #09f;
+    border: 1px solid #000;
+    border-radius: 2px;
+    z-index: 1
 }
+
 .cell .lunar,
 .cell .neutral,
 .cell .stellar {
-  position: relative;
-  z-index: 9;
-  line-height: 1.1;
+    position: relative;
+    z-index: 9;
+    line-height: 1.1
 }
+
 .cell.water .lunar,
 .cell.water .stellar {
-  text-shadow:
-    0 0 5px #fff,
-    0 0 10px #fff,
-    1px 1px 0 #000 !important;
+    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 1px 1px 0 #000 !important
 }
+
 .structure {
-  font-weight: 700;
-  font-size: 18px;
+    font-weight: 700;
+    font-size: 18px
 }
+
 #ui {
-  width: 340px;
+    width: 340px
 }
+
 #log {
-  height: 140px;
-  overflow-y: auto;
-  background: #111;
-  padding: 10px;
-  margin-bottom: 10px;
-  font-size: 11px;
-  border: 1px solid #444;
+    height: 140px;
+    overflow-y: auto;
+    background: #111;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    border: 1px solid #444
 }
+
 button {
-  margin: 3px;
-  padding: 8px;
-  cursor: pointer;
-  background: #333;
-  color: #fff;
-  border: 1px solid #555;
-  font-size: 11px;
+    margin: 3px;
+    padding: 8px;
+    cursor: pointer;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    font-size: 11px
 }
+
 button:hover {
-  background: #444;
+    background: #444
 }
+
 button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+    opacity: .5;
+    cursor: not-allowed
 }
+
 .selected {
-  outline: 3px solid #ff0;
+    outline: 3px solid #ff0
 }
+
 .movable {
-  outline: 2px dashed #ff0;
-  z-index: 100;
+    outline: 2px dashed #ff0;
+    z-index: 100
 }
+
 .range-indicator::after {
-  content: "◯";
-  position: absolute;
-  color: #000;
-  font-size: 20px;
-  pointer-events: none;
+    content: "◯";
+    position: absolute;
+    color: #000;
+    font-size: 20px;
+    pointer-events: none
 }
+
 .cell.selected {
-  z-index: 12;
+    z-index: 12
 }
+
 .cell.movable {
-  z-index: 11;
+    z-index: 11
 }
+
 .cell {
-  z-index: 1;
+    z-index: 1
 }
+
 #info-panel {
-  background: #111;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #444;
-  min-height: 120px;
-  font-size: 11px;
+    background: #111;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #444;
+    min-height: 120px;
+    font-size: 11px
 }
+
 .info-row {
-  margin: 3px 0;
+    margin: 3px 0
 }
+
 .info-label {
-  color: #888;
-  display: inline-block;
-  width: 85px;
+    color: #888;
+    display: inline-block;
+    width: 85px
 }
+
 #scenario-select {
-  margin-bottom: 10px;
-  font-size: 12px;
+    margin-bottom: 10px;
+    font-size: 12px
 }
+
 .skirmish-bg {
-  background: #3a3a5a !important;
+    background: #3a3a5a !important
 }
+
 #modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .7);
+    z-index: 1000
 }
+
 #modal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #222;
-  border: 2px solid #555;
-  padding: 20px;
-  text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #222;
+    border: 2px solid #555;
+    padding: 20px;
+    text-align: center
 }
+
 #modal h3 {
-  margin: 0 0 15px 0;
-  color: #f66;
+    margin: 0 0 15px 0;
+    color: #f66
 }
+
 #modal button {
-  margin: 10px;
-  padding: 10px 20px;
+    margin: 10px;
+    padding: 10px 20px
 }
+
 #turn-confirm-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 1001;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .7);
+    z-index: 1001
 }
+
 #turn-confirm-box {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #222;
-  border: 2px solid #fa0;
-  padding: 20px;
-  text-align: center;
-  max-width: 300px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #222;
+    border: 2px solid #fa0;
+    padding: 20px;
+    text-align: center;
+    max-width: 300px
 }
+
 #turn-confirm-box h3 {
-  margin: 0 0 15px 0;
-  color: #fa0;
+    margin: 0 0 15px 0;
+    color: #fa0
 }
+
 .pending-capture {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 6px;
-  height: 6px;
-  background: #0f0;
-  border-radius: 50%;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 6px;
+    height: 6px;
+    background: #0f0;
+    border-radius: 50%
 }
+
 .hq-target {
-  animation: pulse-red 1s infinite;
-  box-shadow: 0 0 10px red;
+    animation: pulse-red 1s infinite;
+    box-shadow: 0 0 10px red
 }
+
 @keyframes pulse-red {
-  0%,
-  100% {
-    box-shadow: 0 0 5px red;
-  }
-  50% {
-    box-shadow:
-      0 0 15px red,
-      0 0 25px red;
-  }
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px red
+    }
+
+    50% {
+        box-shadow: 0 0 15px red, 0 0 25px red
+    }
 }
+
 .range-highlight {
-  position: relative;
+    position: relative
 }
+
 .range-highlight::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 0, 0.15);
-  border-radius: 50%;
-  z-index: 5;
-  pointer-events: none;
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 0, .15);
+    border-radius: 50%;
+    z-index: 5;
+    pointer-events: none
 }
+
 .min-range-highlight::before {
-  background: rgba(255, 100, 0, 0.1);
+    background: rgba(255, 100, 0, .1)
 }
+
 .friendly-passable {
-  outline: 1px dashed #666;
+    outline: 1px dashed #666
 }
+
 .capture-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: #0f0;
-  z-index: 10;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: #0f0;
+    z-index: 10
 }
