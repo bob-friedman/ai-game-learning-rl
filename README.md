@@ -106,10 +106,6 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ![Grid Combat Screenshot 3](docs/images/screenshot_3_gridcombat.png)
 
-#### Updated Version for Testing
-
-The file gridwars_alternate.html is a standalone, updated version of this game engine for testing. It has an updated AI player and four advanced scenarios based on the training ones as a template. It is a minified version of it for some performance.
-
 ## Installation
 
 To run the games locally, clone this repository and serve the directory chess/ or boxes/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
@@ -149,7 +145,7 @@ The Boxes game logic is contained in `boxes/boxes.js`. The game state is managed
 
 ### Grid Combat
 
-The game logic for Grid Combat is contained in `grid-combat/grid-combat.js`. The following variables and functions can be used to extract game state and interact with the game:
+The game logic for Grid Combat is contained in `grid-combat/index.html`. The following variables and functions can be used to extract game state and interact with the game:
 
 -   **`map`**: A 2D array of objects representing the terrain layout. Each object contains the terrain type and coordinates.
 -   **`units`**: An array of unit objects currently on the battlefield, including their type, position, HP, team, and status.
