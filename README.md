@@ -100,6 +100,10 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ![Grid Combat Screenshot 3](docs/images/screenshot_3_gridcombat.png)
 
+#### Updated Version for Testing
+
+The file gridwars_alternate.html is a standalone, updated version of this game engine for testing. It has an updated AI player and four advanced scenarios based on the training ones as a template. It is a minified version of it for some performance.
+
 ## Installation
 
 To run the games locally, clone this repository and serve the directory chess/ or boxes/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
