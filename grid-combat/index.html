@@ -1,66 +1,181 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grid Combat</title>
-    <link rel="stylesheet" href="style.css">
+<style>
+body { font-family: monospace; background: #1a1a1a; color: #ddd; display: flex; gap: 20px; padding: 20px; }
+#board { display: grid; gap: 0; }
+.cell { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; border: 1px solid #444; position: relative; }
+.cell:hover { border-color: #fff; z-index: 13 }
+.plain { background: #5a6; }
+.wood { background: #373; }
+.mountain { background: #777; }
+.road { background: #975; }
+.water { background: #48a; color: #8cf; }
+.terrain-char { position: absolute; color: rgba(0,0,0,0.15); font-size: 20px; font-weight: bold; pointer-events: none; z-index: 0; }
+.stellar { color: #ffd700 !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
+.lunar { color: #4da6ff !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
+.neutral { color: #e0e0e0 !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
+.cell.stellar-unit::after {
+content: "";
+position: absolute;
+top: -1px;
+left: -1px;
+width: 8px;
+height: 8px;
+background: #ff9900;
+border: 1px solid #000;
+border-radius: 2px;
+z-index: 1;
+}
+.cell.lunar-unit::after {
+content: "";
+position: absolute;
+top: -1px;
+right: -1px;
+width: 8px;
+height: 8px;
+background: #0099ff;
+border: 1px solid #000;
+border-radius: 2px;
+z-index: 1;
+}
+.cell .stellar, .cell .lunar, .cell .neutral {
+position: relative;
+z-index: 9;
+line-height: 1.1;
+}
+.cell.water .stellar, .cell.water .lunar {
+text-shadow:
+0 0 5px #fff,
+0 0 10px #fff,
+1px 1px 0 #000 !important;
+}
+.structure { font-weight: bold; font-size: 18px; }
+#ui { width: 340px; }
+#log { height: 140px; overflow-y: auto; background: #111; padding: 10px; margin-bottom: 10px; font-size: 11px; border: 1px solid #444; }
+button { margin: 3px; padding: 8px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; font-size: 11px; }
+button:hover { background: #444; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.selected { outline: 3px solid #ff0; }
+.movable { outline: 2px dashed #ff0; z-index: 100; }
+.range-indicator::before {
+content: "●";
+position: absolute;
+bottom: 2px;
+right: 2px;
+font-size: 12px;
+color: #000;
+pointer-events: none;
+z-index: 20;
+line-height: 1;
+}
+.cell.selected { z-index: 12; }
+.cell.movable { z-index: 11; }
+.cell { z-index: 1; }
+#info-panel { background: #111; padding: 10px; margin-bottom: 10px; border: 1px solid #444; min-height: 120px; font-size: 11px; }
+.info-row { margin: 3px 0; }
+.info-label { color: #888; display: inline-block; width: 85px; }
+#scenario-select { margin-bottom: 10px; font-size: 12px; }
+.skirmish-bg { background: #3a3a5a !important; }
+#modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; }
+#modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #555; padding: 20px; text-align: center; }
+#modal h3 { margin: 0 0 15px 0; color: #ff6666; }
+#modal button { margin: 10px; padding: 10px 20px; }
+#turn-confirm-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1001; }
+#turn-confirm-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #fa0; padding: 20px; text-align: center; max-width: 300px; }
+#turn-confirm-box h3 { margin: 0 0 15px 0; color: #fa0; }
+.pending-capture { position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; background: #0f0; border-radius: 50%; }
+.hq-target {
+animation: pulse-red 1s infinite;
+box-shadow: 0 0 10px #f00;
+}
+@keyframes pulse-red {
+0%, 100% { box-shadow: 0 0 5px #f00; }
+50% { box-shadow: 0 0 15px #f00, 0 0 25px #f00; }
+}
+.range-highlight {
+  position: relative;
+}
+.range-highlight::before {
+  content: "●";
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 12px;
+  color: #000;
+  z-index: 20;
+  pointer-events: none;
+  line-height: 1;
+}
+.min-range-highlight::before {
+  content: "●";
+  color: #888 !important;
+}
+.friendly-passable {
+  outline: 1px dashed #666;
+}
+.capture-progress {
+  position: absolute;
+  bottom: 0; left: 0; height: 3px;
+  background: #0f0;
+  z-index: 10;
+}
+</style>
 </head>
-
 <body>
-    <div id="board"></div>
-    <div id="ui">
-        <div id="scenario-select">
-            <strong>Scenario:</strong><br>
-            <select id="scenario-picker" onchange="loadScenario(this.value)" style="width:200px;margin:5px 0">
-                <optgroup label="Training Scenarios">
-                    <option value="borderClash">Border Clash</option>
-                    <option value="siege">Siege</option>
-                    <option value="bridgeHead">River Crossing</option>
-                    <option value="gauntlet">The Gauntlet</option>
-                </optgroup>
-                <optgroup label="Random Skirmish">
-                    <option value="skirmishMedium">Lake Crossing (16x14 - 11 units)</option>
-                    <option value="skirmishLarge">Mountain Frontier (20x16 - 12 units)</option>
-                </optgroup>
-            </select>
-            <button onclick="randomizeCurrent()" id="random-btn" style="display:none">New Random Map</button>
-        </div>
-        <div id="info-panel">
-            <div class="info-row"><span class="info-label">Terrain:</span><span id="info-terrain">-</span></div>
-            <div class="info-row"><span class="info-label">Defense:</span><span id="info-defense">-</span></div>
-            <div class="info-row"><span class="info-label">Move Cost:</span><span id="info-move">-</span></div>
-            <div class="info-row"><span class="info-label">Structure:</span><span id="info-structure">-</span></div>
-            <div class="info-row"><span class="info-label">Unit:</span><span id="info-unit">-</span></div>
-            <div class="info-row" id="pending-capture-info" style="color:#0f0;display:none"></div>
-        </div>
-        <div>Turn: <span id="turn">1</span> | <span id="team" class="stellar">Stellar Command</span></div>
-        <div id="log"></div>
-        <button onclick="undoMove()" id="undo-btn" disabled="disabled">Undo Move</button>
-        <button onclick="confirmEndTurn()">End Turn</button>
-        <button onclick="confirmReset()">Reset</button>
-    </div>
-
-    <div id="modal-overlay">
-        <div id="modal">
-            <h3>Reset Game?</h3>
-            <p>Current progress will be lost.</p>
-            <button onclick="executeReset()" style="background:#633">Reset</button>
-            <button onclick="closeModal()" style="background:#363">Cancel</button>
-        </div>
-    </div>
-
-    <div id="turn-confirm-modal">
-        <div id="turn-confirm-box">
-            <h3>End Turn?</h3>
-            <p id="turn-confirm-msg">You have unmoved units.</p>
-            <button onclick="executeEndTurn()" style="background:#a60">End Turn</button>
-            <button onclick="closeTurnConfirm()" style="background:#363">Cancel</button>
-        </div>
-    </div>
-
-    <script src="grid-combat.js"></script>
+<div id="board"></div>
+<div id="ui">
+<div id="scenario-select">
+<strong>Scenario:</strong><br>
+<select id="scenario-picker" onchange="loadScenario(this.value)" style="width: 200px; margin: 5px 0;">
+<optgroup label="Training Scenarios">
+<option value="borderClash">Border Clash</option>
+<option value="siege">Siege</option>
+<option value="bridgeHead">River Crossing</option>
+<option value="gauntlet">The Gauntlet</option>
+</optgroup>
+<optgroup label=Advanced Training>
+  <option value=borderClashAdvanced>Border Clash - Advanced</option>
+  <option value=siegeAdvanced>Siege - Advanced</option>
+  <option value=bridgeHeadAdvanced>River Crossing - Advanced</option>
+  <option value=gauntletAdvanced>The Gauntlet - Advanced</option>
+</optgroup>
+<optgroup label="Random Skirmish">
+<option value="skirmishMedium">Lake Crossing (16x14 - 11 units)</option>
+<option value="skirmishLarge">Mountain Frontier (20x16 - 12 units)</option>
+</optgroup>
+</select>
+<button onclick="randomizeCurrent()" id="random-btn" style="display:none;">New Random Map</button>
+</div>
+<div id="info-panel">
+<div class="info-row"><span class="info-label">Terrain:</span><span id="info-terrain">-</span></div>
+<div class="info-row"><span class="info-label">Defense:</span><span id="info-defense">-</span></div>
+<div class="info-row"><span class="info-label">Move Cost:</span><span id="info-move">-</span></div>
+<div class="info-row"><span class="info-label">Structure:</span><span id="info-structure">-</span></div>
+<div class="info-row"><span class="info-label">Unit:</span><span id="info-unit">-</span></div>
+<div class="info-row" id="pending-capture-info" style="color: #0f0; display: none;"></div>
+</div>
+<div>Turn: <span id="turn">1</span> | <span id="team" class="stellar">Stellar Command</span></div>
+<div id="log"></div>
+<button onclick="undoMove()" id="undo-btn" disabled>Undo Move</button>
+<button onclick="confirmEndTurn()">End Turn</button>
+<button onclick="confirmReset()">Reset</button>
+</div>
+<div id="modal-overlay">
+<div id="modal">
+<h3>Reset Game?</h3>
+<p>Current progress will be lost.</p>
+<button onclick="executeReset()" style="background: #633;">Reset</button>
+<button onclick="closeModal()" style="background: #363;">Cancel</button>
+</div>
+</div>
+<div id="turn-confirm-modal">
+<div id="turn-confirm-box">
+<h3>End Turn?</h3>
+<p id="turn-confirm-msg">You have unmoved units.</p>
+<button onclick="executeEndTurn()" style="background: #a60;">End Turn</button>
+<button onclick="closeTurnConfirm()" style="background: #363;">Cancel</button>
+</div>
+</div>
 </body>
-
 </html>
