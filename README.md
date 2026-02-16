@@ -121,8 +121,6 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
 
-![Grid Combat Screenshot 2](docs/images/screenshot_2_gridcombat.png)
-
 ![Grid Combat Screenshot 3](docs/images/screenshot_3_gridcombat.png)
 
 ## Installation
