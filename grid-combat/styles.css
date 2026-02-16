@@ -49,7 +49,7 @@ text-shadow:
 }
 .structure { font-weight: bold; font-size: 18px; }
 #ui { width: 340px; }
-#log { height: 150px; overflow-y: auto; background: #111; padding: 10px; margin-bottom: 5px; font-size: 13px; border: 1px solid #444; }
+#log { height: 150px; overflow-y: auto; background: #111; padding: 10px; margin-top: 8px; margin-bottom: 5px; font-size: 13px; border: 1px solid #444; }
 button { margin: 2px; padding: 6px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; font-size: 12px; }
 button:hover { background: #444; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
