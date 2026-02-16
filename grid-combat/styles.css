@@ -49,7 +49,7 @@ text-shadow:
 }
 .structure { font-weight: bold; font-size: 18px; }
 #ui { width: 340px; }
-#log { height: 140px; overflow-y: auto; background: #111; padding: 10px; margin-bottom: 10px; font-size: 13px; border: 1px solid #444; }
+#log { height: 150px; overflow-y: auto; background: #111; padding: 10px; margin-bottom: 10px; font-size: 13px; border: 1px solid #444; }
 button { margin: 3px; padding: 8px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; font-size: 11px; }
 button:hover { background: #444; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -69,7 +69,7 @@ line-height: 1;
 .cell.selected { z-index: 12; }
 .cell.movable { z-index: 11; }
 .cell { z-index: 1; }
-#info-panel { background: #111; padding: 10px; margin-bottom: 10px; border: 1px solid #444; min-height: 120px; font-size: 13px; }
+#info-panel { background: #111; padding: 10px; margin-bottom: 10px; border: 1px solid #444; min-height: 130px; font-size: 13px; }
 .info-row { margin: 3px 0; }
 .info-label { color: #888; display: inline-block; width: 85px; }
 #scenario-select { margin-bottom: 10px; font-size: 13px; }
