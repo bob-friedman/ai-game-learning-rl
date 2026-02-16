@@ -49,7 +49,7 @@ text-shadow:
 }
 .structure { font-weight: bold; font-size: 18px; }
 #ui { width: 340px; }
-#log { height: 140px; overflow-y: auto; background: #111; padding: 10px; margin-bottom: 10px; font-size: 11px; border: 1px solid #444; }
+#log { height: 140px; overflow-y: auto; background: #111; padding: 10px; margin-bottom: 10px; font-size: 13px; border: 1px solid #444; }
 button { margin: 3px; padding: 8px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; font-size: 11px; }
 button:hover { background: #444; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -69,11 +69,10 @@ line-height: 1;
 .cell.selected { z-index: 12; }
 .cell.movable { z-index: 11; }
 .cell { z-index: 1; }
-#info-panel { background: #111; padding: 10px; margin-bottom: 10px; border: 1px solid #444; min-height: 120px; font-size: 11px; }
+#info-panel { background: #111; padding: 10px; margin-bottom: 10px; border: 1px solid #444; min-height: 120px; font-size: 13px; }
 .info-row { margin: 3px 0; }
 .info-label { color: #888; display: inline-block; width: 85px; }
-#scenario-select { margin-bottom: 10px; font-size: 12px; }
-.skirmish-bg { background: #3a3a5a !important; }
+#scenario-select { margin-bottom: 10px; font-size: 13px; }
 #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; }
 #modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #555; padding: 20px; text-align: center; }
 #modal h3 { margin: 0 0 15px 0; color: #ff6666; }
