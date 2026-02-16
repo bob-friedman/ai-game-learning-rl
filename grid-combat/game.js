@@ -1235,10 +1235,12 @@ function showTileInfo(x, y) {
     const unitEl = document.getElementById('info-unit');
     if (unit) {
         const unitData = UNITS[unit.type];
-        unitEl.innerHTML = `<span class="${unit.team === 0 ? 'stellar' : 'lunar'}">${unitData.name}</span> (${unit.hp}/${unit.maxHp}) ${unit.moved ? '[MOVED]' : ''}`;
+        unitEl.innerHTML = `<span class="${unit.team === 0 ? 'gold' : 'blue'}">${unitData.name}</span> (${unit.hp}/${unit.maxHp}) ${unit.moved ? '[MOVED]' : ''}`;
         unitEl.innerHTML += `<br><small>${unitData.desc}</small>`;
         if (unitData.capture) unitEl.innerHTML += `<br><small>✓ Can capture HQ</small>`;
         if (unitData.ranged) unitEl.innerHTML += `<br><small>↔ Range ${unitData.minRange}-${unitData.maxRange}</small>`;
+        if (uData.capture) unitEl.innerHTML += `<small> Can capture HQ.</small>`;
+        if (uData.ranged) unitEl.innerHTML += `<small> Attack range ${uData.minRange}-${uData.maxRange}.</small>`;
         if (unit.pendingCapture && structure) {
             const progress = Math.floor(((20 - structure.captureLeft) / 20) * 100);
             unitEl.innerHTML += `<br><small style="color:#0f0">Capturing HQ: ${progress}%</small>`;
