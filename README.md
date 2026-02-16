@@ -94,6 +94,19 @@ Ranged units (Artillery, Rocket) attack at distance without retaliation, but can
 | **Road** | 0% | 1 | Fast movement. |
 | **Water** | - | Impassable | Impassable to ground units. |
 
+#### Damage Matrix (Base Damage)
+
+| Attacker \ Defender | Infantry | Tank | Mech | Heavy | Artillery | Rocket |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Infantry** | 5 | 2 | 3 | 2 | 4 | 3 |
+| **Tank** | 8 | 6 | 5 | 4 | 5 | 6 |
+| **Mech** | 6 | 5 | 5 | 3 | 6 | 5 |
+| **Heavy Tank** | 10 | 8 | 9 | 6 | 7 | 8 |
+| **Artillery** | 9 | 8 | 8 | 6 | 5 | 7 |
+| **Rocket** | 6 | 10 | 9 | 8 | 6 | 5 |
+
+*Actual damage = Base × (Attacker HP / Max HP) × Terrain Defense.*
+
 **Victory Condition: HQ Capture.**
 HQs require 20 capture points to seize. Each turn, capturing units contribute points equal to their current HP (max 10). A full-health Infantry or Mech needs 2 turns to capture; wounded units take longer. Only Infantry and Mech can capture. If both sides lose their capturing units, then a stalemate occurs.
 
@@ -120,8 +133,6 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 #### Screenshots
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
-
-![Grid Combat Screenshot 3](docs/images/screenshot_3_gridcombat.png)
 
 ## Installation
 
