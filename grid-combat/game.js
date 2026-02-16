@@ -11,22 +11,22 @@ const UNITS = {
     infantry: {
         name: 'Infantry', char: 'i', hp: 10, move: 3, vision: 2,
         damage: { infantry: 5, tank: 2, mech: 3, heavy: 2, artillery: 4, rocket: 3 },
-        capture: true, desc: 'Basic unit. Can capture HQ.'
+        capture: true, desc: 'Basic unit.'
     },
     tank: {
         name: 'Tank', char: 'T', hp: 10, move: 2, vision: 3,
         damage: { infantry: 8, tank: 6, mech: 5, heavy: 4, artillery: 5, rocket: 6 },
-        capture: false, desc: 'Mobile armor. Road bonus essential.'
+        capture: false, desc: 'Mobile armor.'
     },
     mech: {
         name: 'Mech', char: 'm', hp: 12, move: 2, vision: 2,
         damage: { infantry: 6, tank: 5, mech: 5, heavy: 3, artillery: 6, rocket: 5 },
-        capture: true, desc: 'Heavy infantry. Better defense than tanks.'
+        capture: true, desc: 'Heavy infantry.'
     },
     heavy: {
         name: 'Heavy Tank', char: 'H', hp: 16, move: 2, vision: 2,
         damage: { infantry: 10, tank: 8, mech: 9, heavy: 6, artillery: 7, rocket: 8 },
-        capture: false, desc: 'Juggernaut. Slow but devastating'
+        capture: false, desc: 'Juggernaut.'
     },
     artillery: {
         name: 'Artillery', char: 'A', hp: 8, move: 2, vision: 5,
@@ -38,7 +38,7 @@ const UNITS = {
         name: 'Rocket', char: 'R', hp: 7, move: 2, vision: 4,
         damage: { infantry: 6, tank: 10, mech: 9, heavy: 8, artillery: 6, rocket: 5 },
         capture: false, ranged: true, minRange: 3, maxRange: 5,
-        desc: 'Anti-armor specialist. Fragile. Range 3-5.'
+        desc: 'Anti-armor. Cannot move and fire.'
     }
 };
 
@@ -943,7 +943,7 @@ function endTurn() {
 
     if (!stellarCanCapture && !lunarCanCapture) {
         gameOver = true;
-        log('STALEMATE! No capturing units remain on either side.');
+        log('Stalemate! No capturing units remain on either side.');
         log('Game ends in a draw.');
         return;
     }
@@ -1033,8 +1033,8 @@ function processPendingCaptures() {
             log(`HQ CAPTURED by ${teamName}!`);
 
             const allHQs = structures.filter(s => s.type === 'hq');
-            if (allHQs.every(s => s.team === 0)) { gameOver = true; log(`VICTORY! Stellar Command wins!`); }
-            else if (allHQs.every(s => s.team === 1)) { gameOver = true; log(`VICTORY! Lunar Directorate wins!`); }
+            if (allHQs.every(s => s.team === 0)) { gameOver = true; log(`Victory! Gold wins!`); }
+            else if (allHQs.every(s => s.team === 1)) { gameOver = true; log(`Victory! Blue wins!`); }
         }
     }
     pendingCaptures = [];
@@ -1179,9 +1179,9 @@ function loadSkirmish(type) {
     document.getElementById('board').style.gridTemplateRows = `repeat(${boardHeight}, 28px)`;
     render();
     updateUI();
-    log(`Skirmish: ${template.name} - ${template.unitsPerSide} units per side`);
+    log(`Skirmish: ${template.name}`);
     const visionRadius = calculateHQVision();
-    log(`ℹ HQ Vision Range: ${visionRadius} tiles (scaled for map size)`);
+    log(`HQ Vision Range: ${visionRadius} tiles (scaled for map)`);
 }
 
 // === UI & Rendering ===
