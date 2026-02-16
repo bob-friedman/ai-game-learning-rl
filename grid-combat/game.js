@@ -5,7 +5,7 @@
 
 // === Constants ===
 
-const TEAMS = ['Stellar Command', 'Lunar Directorate'];
+const TEAMS = ['Gold', 'Blue'];
 
 const UNITS = {
     infantry: {
