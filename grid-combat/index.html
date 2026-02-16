@@ -8,8 +8,21 @@
 <body>
     <div id="board"></div>
     <div id="ui">
+        <div>Turn: <span id="turn">1</span> | <span id="team" class="stellar">Stellar Command</span></div>
+        <div id="log"></div>
+        <button onclick="undoMove()" id="undo-btn" disabled>Undo Move</button>
+        <button onclick="confirmEndTurn()">End Turn</button>
+        <button onclick="confirmReset()">Reset</button>
+        <div id="info-panel">
+            <div class="info-row"><span class="info-label">Terrain:</span><span id="info-terrain">-</span></div>
+            <div class="info-row"><span class="info-label">Defense:</span><span id="info-defense">-</span></div>
+            <div class="info-row"><span class="info-label">Move Cost:</span><span id="info-move">-</span></div>
+            <div class="info-row"><span class="info-label">Structure:</span><span id="info-structure">-</span></div>
+            <div class="info-row"><span class="info-label">Unit:</span><span id="info-unit">-</span></div>
+            <div class="info-row" id="pending-capture-info" style="color: #0f0; display: none;"></div>
+        </div>
         <div id="scenario-select">
-            <strong>Scenario:</strong><br>
+            <strong>Scenario:</strong>
             <select id="scenario-picker" onchange="loadScenario(this.value)" style="width: 200px; margin: 5px 0; font-size: 10px;">
                 <optgroup label="Training Scenarios">
                     <option value="borderClash">Border Clash</option>
@@ -24,25 +37,12 @@
                     <option value="gauntletAdvanced">The Gauntlet - Advanced</option>
                 </optgroup>
                 <optgroup label="Random Skirmish">
-                    <option value="skirmishMedium">Lake Crossing (16x14 - 11 units)</option>
-                    <option value="skirmishLarge">Mountain Frontier (20x16 - 12 units)</option>
+                    <option value="skirmishMedium">Lake Crossing (16x14)</option>
+                    <option value="skirmishLarge">Mountain Frontier (20x16)</option>
                 </optgroup>
             </select>
             <button onclick="randomizeCurrent()" id="random-btn" style="display:none;">New Random Map</button>
         </div>
-        <div id="info-panel">
-            <div class="info-row"><span class="info-label">Terrain:</span><span id="info-terrain">-</span></div>
-            <div class="info-row"><span class="info-label">Defense:</span><span id="info-defense">-</span></div>
-            <div class="info-row"><span class="info-label">Move Cost:</span><span id="info-move">-</span></div>
-            <div class="info-row"><span class="info-label">Structure:</span><span id="info-structure">-</span></div>
-            <div class="info-row"><span class="info-label">Unit:</span><span id="info-unit">-</span></div>
-            <div class="info-row" id="pending-capture-info" style="color: #0f0; display: none;"></div>
-        </div>
-        <div>Turn: <span id="turn">1</span> | <span id="team" class="stellar">Stellar Command</span></div>
-        <div id="log"></div>
-        <button onclick="undoMove()" id="undo-btn" disabled>Undo Move</button>
-        <button onclick="confirmEndTurn()">End Turn</button>
-        <button onclick="confirmReset()">Reset</button>
     </div>
 
     <div id="modal-overlay">
