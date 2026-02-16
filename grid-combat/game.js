@@ -922,7 +922,7 @@ function loadScenario(scenarioId) {
     document.getElementById('scenario-picker').value = scenarioId;
     log(`Scenario: ${SCENARIOS[scenarioId]?.name || scenarioId} loaded`);
     const visionRadius = calculateHQVision();
-    log(`HQ Vision Range: ${visionRadius} tiles (scaled for map size)`);
+    log(`HQ Vision Range: ${visionRadius} tiles`);
 }
 
 function endTurn() {
@@ -1181,7 +1181,7 @@ function loadSkirmish(type) {
     updateUI();
     log(`Skirmish: ${template.name}`);
     const visionRadius = calculateHQVision();
-    log(`HQ Vision Range: ${visionRadius} tiles (scaled for map)`);
+    log(`HQ Vision Range: ${visionRadius} tiles`);
 }
 
 // === UI & Rendering ===
