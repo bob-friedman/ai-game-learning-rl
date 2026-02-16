@@ -1,0 +1,119 @@
+
+body { font-family: monospace; background: #1a1a1a; color: #ddd; display: flex; gap: 20px; padding: 20px; }
+#board { display: grid; gap: 0; }
+.cell { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; border: 1px solid #444; position: relative; }
+.cell:hover { border-color: #fff; z-index: 13 }
+.plain { background: #5a6; }
+.wood { background: #373; }
+.mountain { background: #777; }
+.road { background: #975; }
+.water { background: #48a; color: #8cf; }
+.terrain-char { position: absolute; color: rgba(0,0,0,0.15); font-size: 20px; font-weight: bold; pointer-events: none; z-index: 0; }
+.stellar { color: #ffd700 !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
+.lunar { color: #4da6ff !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
+.neutral { color: #e0e0e0 !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
+.cell.stellar-unit::after {
+content: "";
+position: absolute;
+top: -1px;
+left: -1px;
+width: 8px;
+height: 8px;
+background: #ff9900;
+border: 1px solid #000;
+border-radius: 2px;
+z-index: 1;
+}
+.cell.lunar-unit::after {
+content: "";
+position: absolute;
+top: -1px;
+right: -1px;
+width: 8px;
+height: 8px;
+background: #0099ff;
+border: 1px solid #000;
+border-radius: 2px;
+z-index: 1;
+}
+.cell .stellar, .cell .lunar, .cell .neutral {
+position: relative;
+z-index: 9;
+line-height: 1.1;
+}
+.cell.water .stellar, .cell.water .lunar {
+text-shadow:
+0 0 5px #fff,
+0 0 10px #fff,
+1px 1px 0 #000 !important;
+}
+.structure { font-weight: bold; font-size: 18px; }
+#ui { width: 340px; }
+#log { height: 140px; overflow-y: auto; background: #111; padding: 10px; margin-bottom: 10px; font-size: 11px; border: 1px solid #444; }
+button { margin: 3px; padding: 8px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; font-size: 11px; }
+button:hover { background: #444; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.selected { outline: 3px solid #ff0; }
+.movable { outline: 2px dashed #ff0; z-index: 100; }
+.range-indicator::before {
+content: "●";
+position: absolute;
+bottom: 2px;
+right: 2px;
+font-size: 12px;
+color: #000;
+pointer-events: none;
+z-index: 20;
+line-height: 1;
+}
+.cell.selected { z-index: 12; }
+.cell.movable { z-index: 11; }
+.cell { z-index: 1; }
+#info-panel { background: #111; padding: 10px; margin-bottom: 10px; border: 1px solid #444; min-height: 120px; font-size: 11px; }
+.info-row { margin: 3px 0; }
+.info-label { color: #888; display: inline-block; width: 85px; }
+#scenario-select { margin-bottom: 10px; font-size: 12px; }
+.skirmish-bg { background: #3a3a5a !important; }
+#modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; }
+#modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #555; padding: 20px; text-align: center; }
+#modal h3 { margin: 0 0 15px 0; color: #ff6666; }
+#modal button { margin: 10px; padding: 10px 20px; }
+#turn-confirm-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1001; }
+#turn-confirm-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #fa0; padding: 20px; text-align: center; max-width: 300px; }
+#turn-confirm-box h3 { margin: 0 0 15px 0; color: #fa0; }
+.pending-capture { position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; background: #0f0; border-radius: 50%; }
+.hq-target {
+animation: pulse-red 1s infinite;
+box-shadow: 0 0 10px #f00;
+}
+@keyframes pulse-red {
+0%, 100% { box-shadow: 0 0 5px #f00; }
+50% { box-shadow: 0 0 15px #f00, 0 0 25px #f00; }
+}
+.range-highlight {
+  position: relative;
+}
+.range-highlight::before {
+  content: "●";
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 12px;
+  color: #000;
+  z-index: 20;
+  pointer-events: none;
+  line-height: 1;
+}
+.min-range-highlight::before {
+  content: "●";
+  color: #888 !important;
+}
+.friendly-passable {
+  outline: 1px dashed #666;
+}
+.capture-progress {
+  position: absolute;
+  bottom: 0; left: 0; height: 3px;
+  background: #0f0;
+  z-index: 10;
+}

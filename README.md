@@ -75,6 +75,25 @@ Combat Resolution:
 
 Ranged units (Artillery, Rocket) attack at distance without retaliation, but cannot move and fire in the same turn. Positioning them behind frontline units is essential.
 
+#### Units and Terrain
+
+| Unit | HP | Move | Vision | Range | Capture | Description |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Infantry** | 10 | 3 | 2 | 1 | Yes | Basic unit. Can capture HQ. |
+| **Tank** | 10 | 2 | 3 | 1 | No | Mobile armor. Road bonus essential. |
+| **Mech** | 12 | 2 | 2 | 1 | Yes | Heavy infantry. Better defense than tanks. |
+| **Heavy Tank** | 16 | 2 | 2 | 1 | No | Juggernaut. Slow but devastating. |
+| **Artillery** | 8 | 2 | 5 | 3-4 | No | Long range. Cannot move and fire. |
+| **Rocket** | 7 | 2 | 4 | 3-5 | No | Anti-armor specialist. Fragile. |
+
+| Terrain | Defense | Move Cost | Description |
+| :--- | :--- | :--- | :--- |
+| **Plains** | 15% | 1 | Open ground. |
+| **Woods** | 30% | 2 | Light cover. |
+| **Mountain** | 60% | 3 | Heavy cover. |
+| **Road** | 0% | 1 | Fast movement. |
+| **Water** | - | Impassable | Impassable to ground units. |
+
 **Victory Condition: HQ Capture.**
 HQs require 20 capture points to seize. Each turn, capturing units contribute points equal to their current HP (max 10). A full-health Infantry or Mech needs 2 turns to capture; wounded units take longer. Only Infantry and Mech can capture. If both sides lose their capturing units, then a stalemate occurs.
 
@@ -145,16 +164,19 @@ The Boxes game logic is contained in `boxes/boxes.js`. The game state is managed
 
 ### Grid Combat
 
-The game logic for Grid Combat is contained in `grid-combat/index.html`. The following variables and functions can be used to extract game state and interact with the game:
+The game logic for Grid Combat is contained in `grid-combat/game.js`. The following variables and functions can be used to extract game state and interact with the game:
 
--   **`map`**: A 2D array of objects representing the terrain layout. Each object contains the terrain type and coordinates.
--   **`units`**: An array of unit objects currently on the battlefield, including their type, position, HP, team, and status.
--   **`structures`**: An array of structure objects (e.g., HQs), including their type, position, team, and capture progress.
+-   **`map`**: A 2D array of objects representing the terrain layout. Each object contains the terrain type (`plain`, `wood`, `mountain`, `road`, `water`) and coordinates.
+-   **`units`**: An array of unit objects currently on the battlefield. Each unit has properties like `type`, `team`, `x`, `y`, `hp`, `maxHp`, and status flags (`moved`, `hasAttacked`).
+-   **`structures`**: An array of structure objects. Each structure (like `hq`) includes its `type`, `x`, `y`, `team`, and `captureLeft` (remaining points needed to capture).
 -   **`turn`**: An integer (0 or 1) indicating which team's turn it is (0: Stellar Command, 1: Lunar Directorate).
 -   **`actionHistory`**: An array of recent actions (moves and combat), useful for tracking the sequence of events in the current turn.
+-   **`UNITS`, `TERRAIN`, `STRUCTURES`**: Constant objects defining the stats and properties of all units, terrain types, and structures in the game.
 -   **`loadScenario(scenarioId)`**: Loads a specific scenario or skirmish by its ID.
 -   **`endTurn()`**: Finalizes the current turn and switches to the other team.
 -   **`undoMove()`**: Reverts the last move made in the current turn, if no combat has occurred.
+-   **`getMovableTiles(unit)`**: Returns an array of coordinates where the given unit can move.
+-   **`getAttackTargets(unit)`**: Returns an array of enemy units that the given unit can attack from its current position.
 
 ## Contributors
 
