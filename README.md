@@ -141,10 +141,6 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
 
-#### Standalone Version
-
-A file named `gridcombat_alternate.html` is located in the `grid-combat` directory and minified for performance. This standalone version is designed for single player use and includes the same AI improvements and visual indicators as the refactored main version.
-
 ## Installation
 
 To run the games locally, clone this repository and serve the directory chess/ or boxes/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
