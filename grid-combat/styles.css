@@ -1,6 +1,5 @@
-
 body { font-family: monospace; background: #1a1a1a; color: #ddd; display: flex; gap: 20px; padding: 20px; }
-#board { display: grid; gap: 0; }
+#board { display: grid; gap: 0; position: relative; } /* Added position relative for floating text */
 .cell { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; border: 1px solid #444; position: relative; }
 .cell:hover { border-color: #fff; z-index: 13 }
 .plain { background: #5a6; }
@@ -8,10 +7,13 @@ body { font-family: monospace; background: #1a1a1a; color: #ddd; display: flex; 
 .mountain { background: #777; }
 .road { background: #975; }
 .water { background: #48a; color: #8cf; }
+/* Terrain characters */
 .terrain-char { position: absolute; color: rgba(0,0,0,0.15); font-size: 20px; font-weight: bold; pointer-events: none; z-index: 0; }
+/* Team colors - improved contrast */
 .stellar { color: #ffd700 !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
 .lunar { color: #4da6ff !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
 .neutral { color: #e0e0e0 !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; font-weight: bold; }
+/* Team cell indicators */
 .cell.stellar-unit::after {
 content: "";
 position: absolute;
@@ -36,6 +38,7 @@ border: 1px solid #000;
 border-radius: 2px;
 z-index: 1;
 }
+/* Verify unit text visible over terrain */
 .cell .stellar, .cell .lunar, .cell .neutral {
 position: relative;
 z-index: 9;
@@ -66,6 +69,7 @@ pointer-events: none;
 z-index: 20;
 line-height: 1;
 }
+/* Raise stacking context for interactive states */
 .cell.selected { z-index: 12; }
 .cell.movable { z-index: 11; }
 .cell { z-index: 1; }
@@ -81,6 +85,7 @@ line-height: 1;
 #turn-confirm-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; border: 2px solid #fa0; padding: 20px; text-align: center; max-width: 300px; }
 #turn-confirm-box h3 { margin: 0 0 15px 0; color: #fa0; }
 .pending-capture { position: absolute; bottom: 0; right: 0; width: 6px; height: 6px; background: #0f0; border-radius: 50%; }
+/* HQ capture opportunity highlight */
 .hq-target {
 animation: pulse-red 1s infinite;
 box-shadow: 0 0 10px #f00;
@@ -89,6 +94,7 @@ box-shadow: 0 0 10px #f00;
 0%, 100% { box-shadow: 0 0 5px #f00; }
 50% { box-shadow: 0 0 15px #f00, 0 0 25px #f00; }
 }
+/* Ranged attack visualization */
 .range-highlight {
   position: relative;
 }
@@ -103,16 +109,81 @@ box-shadow: 0 0 10px #f00;
   pointer-events: none;
   line-height: 1;
 }
+/* Different indicator for minimum range - uses a smaller, grey dot */
 .min-range-highlight::before {
   content: "●";
   color: #888 !important;
 }
+/* Friendly passable visualization */
 .friendly-passable {
   outline: 1px dashed #666;
 }
+/* Capture progress bar */
 .capture-progress {
   position: absolute;
   bottom: 0; left: 0; height: 3px;
   background: #0f0;
   z-index: 10;
 }
+
+/* ── HP dot: health indicator ── */
+.hp-dot {
+  position: absolute; bottom: 2px; left: 2px;
+  width: 6px; height: 6px; border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.5);
+  z-index: 15; pointer-events: none;
+}
+.hp-high { background: #4c4; }
+.hp-mid  { background: #fa0; }
+.hp-low  { background: #f33; }
+
+/* ─── NEW VISUALS FOR AI TURN ─── */
+.active-actor {
+    box-shadow: 0 0 12px 4px #fff, inset 0 0 10px #fff !important;
+    z-index: 200 !important;
+    border-color: #fff !important;
+    transition: box-shadow 0.2s;
+}
+
+.target-actor {
+    box-shadow: 0 0 12px 4px #f00, inset 0 0 10px #f00 !important;
+    z-index: 199 !important;
+    animation: pulse-target 0.5s infinite;
+}
+
+@keyframes pulse-target {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Floating Combat Text */
+.float-text {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    font-weight: bold;
+    font-size: 20px;
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+    pointer-events: none;
+    z-index: 300;
+    animation: floatUp 2.0s ease-out forwards;
+    white-space: nowrap;
+}
+
+.float-damage { color: #ff4444; }
+.float-counter { color: #ffaa00; }
+.float-capture { color: #44ff44; }
+.float-miss { color: #cccccc; }
+
+@keyframes floatUp {
+    0% { top: -5px; opacity: 1; transform: translateX(-50%) scale(1); }
+    20% { top: -20px; opacity: 1; transform: translateX(-50%) scale(1.2); }
+    100% { top: -40px; opacity: 0; transform: translateX(-50%) scale(1); }
+}
+/* Home Territory Gradient – warm tint near each HQ */
+.home-near-gold { box-shadow: inset 0 0 0 2px rgba(255,215,0,0.40); }
+.home-mid-gold  { box-shadow: inset 0 0 0 1px rgba(255,215,0,0.18); }
+.home-near-blue { box-shadow: inset 0 0 0 2px rgba(77,166,255,0.40); }
+.home-mid-blue  { box-shadow: inset 0 0 0 1px rgba(77,166,255,0.18); }

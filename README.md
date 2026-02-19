@@ -54,11 +54,18 @@ Boxes supports multiple control schemes to accommodate different platforms and p
 
 ![Boxes Screenshot](docs/images/screenshot_1_boxes.png)
 
-### Grid Combat
+### Grid Combat (Enhanced Edition v1.2)
 
 ![Grid Combat Icon](docs/images/icon_gridcombat.png)
 
-This browser-based tactical strategy game pits two military factions—Stellar Command and the Lunar Directorate—against each other on grid-based battlefields filled with diverse terrain. Players command a variety of units including infantry, tanks, mechanized walkers, heavy armor, artillery, and rocket launchers, each possessing unique movement ranges, vision capabilities, and combat statistics that interact dynamically with environmental factors like woods, mountains, roads, and water obstacles. The gameplay emphasizes positional strategy and resource management, with units unable to move through certain terrain and defensive bonuses varying by location, while specialized infantry units serve as the only forces capable of capturing enemy headquarters to achieve victory.
+This browser-based tactical strategy game pits two military factions—the Gold and Blue teams—against each other on grid-based battlefields filled with diverse terrain. Players command a variety of units including infantry, tanks, mechanized walkers, heavy armor, artillery, and rocket launchers, each possessing unique movement ranges, vision capabilities, and combat statistics that interact dynamically with environmental factors like woods, mountains, roads, and water obstacles. The gameplay emphasizes positional strategy and resource management, with units unable to move through certain terrain and defensive bonuses varying by location, while specialized infantry units serve as the only forces capable of capturing enemy headquarters to achieve victory.
+
+#### Recent Updates (v1.2)
+
+-   **Defend Mode Latching**: AI units in defend mode now stay committed to defense until all capturing threats are removed from the detection radius, preventing indecisive turn-by-turn movement.
+-   **HQ Tactical Retreat**: Improved AI decision-making for retreating to HQ, with increased pull weight and suppressed terrain comfort during defense.
+-   **Capture Progression**: Ensured that even heavily damaged units (1 HP) can progress HQ capture by at least one point per turn.
+-   **Visual Enhancements**: Added floating combat text for damage and capture points, HP indicators (dots), and a home territory defense gradient.
 
 The turn-based combat system features direct engagements where attackers exchange fire with defenders unless utilizing ranged artillery that can strike from a distance without retaliation. An AI opponent automatically maneuvers the enemy forces during their turn, seeking optimal paths toward capture points and engaging vulnerable targets. The game includes scenarios that present unique tactical puzzles, alongside partly randomized skirmish modes that create maps with natural chokepoints and strategic crossings. Visual feedback features color-coded team indicators, terrain characters, and highlighted movement ranges, while an information panel displays statistics about unit health, terrain defense modifiers, and capture progress.
 
@@ -134,9 +141,9 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
 
-#### Alternate Version
+#### Standalone Version
 
-A file named `gridcombat_alternate.html` is located in the `grid-combat` directory and minified for performance, but it is a standalone alternative to the main version of three files with nicely refactored code. This alternate version is designed for single player use instead of a reinforcement learning objective, with the inclusion of AI improvements and visual indicators for combat and damage.
+A file named `gridcombat_alternate.html` is located in the `grid-combat` directory and minified for performance. This standalone version is designed for single player use and includes the same AI improvements and visual indicators as the refactored main version.
 
 ## Installation
 
@@ -182,7 +189,7 @@ The game logic for Grid Combat is contained in `grid-combat/game.js`. The follow
 -   **`map`**: A 2D array of objects representing the terrain layout. Each object contains the terrain type (`plain`, `wood`, `mountain`, `road`, `water`) and coordinates.
 -   **`units`**: An array of unit objects currently on the battlefield. Each unit has properties like `type`, `team`, `x`, `y`, `hp`, `maxHp`, and status flags (`moved`, `hasAttacked`).
 -   **`structures`**: An array of structure objects. Each structure (like `hq`) includes its `type`, `x`, `y`, `team`, and `captureLeft` (remaining points needed to capture).
--   **`turn`**: An integer (0 or 1) indicating which team's turn it is (0: Stellar Command, 1: Lunar Directorate).
+-   **`turn`**: An integer (0 or 1) indicating which team's turn it is (0: Gold, 1: Blue).
 -   **`actionHistory`**: An array of recent actions (moves and combat), useful for tracking the sequence of events in the current turn.
 -   **`UNITS`, `TERRAIN`, `STRUCTURES`**: Constant objects defining the stats and properties of all units, terrain types, and structures in the game.
 -   **`loadScenario(scenarioId)`**: Loads a specific scenario or skirmish by its ID.
