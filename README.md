@@ -54,17 +54,19 @@ Boxes supports multiple control schemes to accommodate different platforms and p
 
 ![Boxes Screenshot](docs/images/screenshot_1_boxes.png)
 
-### Grid Combat (Enhanced Edition v1.2)
+### Grid Combat (Enhanced Edition v1.3)
 
 ![Grid Combat Icon](docs/images/icon_gridcombat.png)
 
 This browser-based tactical strategy game pits two military factions—the Gold and Blue teams—against each other on grid-based battlefields filled with diverse terrain. Players command a variety of units including infantry, tanks, mechanized walkers, heavy armor, artillery, and rocket launchers, each possessing unique movement ranges, vision capabilities, and combat statistics that interact dynamically with environmental factors like woods, mountains, roads, and water obstacles. The gameplay emphasizes positional strategy and resource management, with units unable to move through certain terrain and defensive bonuses varying by location, while specialized infantry units serve as the only forces capable of capturing enemy headquarters to achieve victory.
 
-#### Recent Updates (v1.2)
+#### Recent Updates (v1.3)
 
--   **Defend Mode Latching**: AI units in defend mode now stay committed to defense until all capturing threats are removed from the detection radius, preventing indecisive turn-by-turn movement.
--   **HQ Tactical Retreat**: Improved AI decision-making for retreating to HQ, with increased pull weight and suppressed terrain comfort during defense.
--   **Capture Progression**: Ensured that even heavily damaged units (1 HP) can progress HQ capture by at least one point per turn.
+-   **Advanced Strategic AI**: Implementation of a dynamic AI system featuring a desperation curve (increasing aggression when losing), conservation doctrine (preserving units during parity), and breach tactics (aggressive breakthroughs during advantage).
+-   **Game Analytics & History**: A comprehensive history system that records turn-by-turn snapshots, calculates strategic balance, and generates a visual performance chart. Data can be exported as JSON for further analysis.
+-   **AI vs AI Spectate Mode**: New game modes allow for automated matches between AI opponents, with adjustable speeds and pause functionality.
+-   **Enhanced UI & Responsiveness**: A completely redesigned, mobile-friendly interface featuring a sliding menu system, better scaling for different screen sizes, and improved touch controls.
+-   **Save/Load Functionality**: Support for saving game progress to local storage and resuming at a later time.
 -   **Visual Enhancements**: Added floating combat text for damage and capture points, HP indicators (dots), and a home territory defense gradient.
 
 The turn-based combat system features direct engagements where attackers exchange fire with defenders unless utilizing ranged artillery that can strike from a distance without retaliation. An AI opponent automatically maneuvers the enemy forces during their turn, seeking optimal paths toward capture points and engaging vulnerable targets. The game includes scenarios that present unique tactical puzzles, alongside partly randomized skirmish modes that create maps with natural chokepoints and strategic crossings. Visual feedback features color-coded team indicators, terrain characters, and highlighted movement ranges, while an information panel displays statistics about unit health, terrain defense modifiers, and capture progress.
@@ -193,6 +195,9 @@ The game logic for Grid Combat is contained in `grid-combat/game.js`. The follow
 -   **`undoMove()`**: Reverts the last move made in the current turn, if no combat has occurred.
 -   **`getMovableTiles(unit)`**: Returns an array of coordinates where the given unit can move.
 -   **`getAttackTargets(unit)`**: Returns an array of enemy units that the given unit can attack from its current position.
+-   **`gameHistory`**: An array of objects representing snapshots of each turn, including material counts, strategic pressure, and net balance. This is the primary source of time-series data for training models.
+-   **`evaluatePosition()`**: Function used to calculate the current strategic balance between teams.
+-   **`exportHistoryJSON()`**: Generates and downloads a JSON file containing the full game history and associated metadata.
 
 ## Contributors
 
