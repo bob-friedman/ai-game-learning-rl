@@ -139,7 +139,7 @@ HQs require 20 capture points to seize. Each turn, capturing units contribute po
 
 Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes. These maps are generated based on basic templates of fixed geography for variability. Randomization affects woods/plains distribution but rivers, bridges, and mountains remain fixed for AI robustness. Also, in all scenarios the units can path through friendly forces but cannot end movement on occupied tiles.
 
-#### Screenshots
+#### Screenshot
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
 
