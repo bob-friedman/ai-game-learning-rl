@@ -4,9 +4,7 @@
 
 This repository has a collection of open-source games designed for use in reinforcement learning (RL) research and development. The games provide diverse environments for training and testing AI agents, with a focus on strategic thinking, puzzle-solving, and tactical gameplay. These features allow for adaptation for the generation of data that is used in training an AI model by the methods of reinforcement learning.
 
-## Games
-
-### Chess
+## Chess
 
 ![Chess Icon](docs/images/icon_chess.png)
 
@@ -14,53 +12,54 @@ Chess is a classic game, in this case supported by the Stockfish v11 chess engin
 
 The primary objective is to outmaneuver the AI and achieve checkmate. The user interface includes features such as drag-and-drop piece movement, undoing previous moves, and starting new games at various skill levels. For advanced users, there is an option to load and save the game state in FEN (Forsyth-Edwards Notation) format, which is accessible by a copy/paste of text operation. The current match is also stored in the browser's local storage, allowing for a resumption of a match at a later time.
 
-#### Platform
+### Platform
 
 This web browser version of Chess supports both desktop and mobile devices. On slower devices or at higher skill levels, the chess engine may take a few seconds for a move, which may cause a brief delay in the availability of the user interface.
 
-#### Puzzles
+### Puzzles
 
 The puzzles in Chess are for delivering checkmate in two moves. First, find the key move that initiates the checkmating sequence, and the AI will respond with its best possible defense. Then deliver the final checkmating move. This is a traditional exercise designed to sharpen one's tactical vision. For a hint, a *best move* option is available in the puzzles section.
 
 Chess includes both historical and computationally curated puzzle sets. The curated set of 1,180 puzzles originated from a set of 329,951 chess positions as derived the Lichess database (theme: mateIn2), and depended on a validation step against the Stockfish v17 engine (see scripts/ in this archive).
 
-#### Sources of Data
+### Sources of Data
 
 -   [https://www.wtharvey.com/m8n2.txt](https://www.wtharvey.com/m8n2.txt)
 -   [https://database.lichess.org/#puzzles](https://database.lichess.org/#puzzles)
 
-#### Screenshot
+
+### Screenshot
 
 ![Chess Screenshot 1](docs/images/screenshot_1_chess.png)
 
-### Boxes
+## Boxes
 
 ![Boxes Icon](docs/images/icon_boxes.png)
 
 Boxes is a minimalist puzzle game that challenges players with logic and spatial reasoning. Inspired by the classic Sokoban genre, the objective is to solve carefully designed levels by pushing boxes to their designated goal locations. The game emphasizes thoughtful planning over quick reflexes.
 
-#### Gameplay
+### Gameplay
 
 The core objective in each level is to maneuver the player character to push every box onto a goal tile. A level is complete only when all boxes are situated on all goals. The primary challenge arises from the layout of the walls and the placement of the boxes. Players must think ahead to avoid pushing boxes into corners or against walls where they can no longer be moved. The game features collections of levels that progressively introduce more complex arrangements.
 
-#### Controls
+### Controls
 
 Boxes supports multiple control schemes to accommodate different platforms and player preferences.
 
 -   **Keyboard**: For desktop play, movement is controlled with the Arrow Keys or the W, A, S, and D keys. Players can undo their most recent move by pressing U or Z. The current level can be reset at any time by pressing the R key.
 -   **Touch and On-Screen Interface**: On touch-enabled devices, players can move by swiping in the desired direction. For more precise control, an on-screen D-pad can be toggled. The user interface also provides dedicated buttons to undo a move or reset the level.
 
-#### Screenshot
+### Screenshot
 
 ![Boxes Screenshot](docs/images/screenshot_1_boxes.png)
 
-### Grid Combat (Enhanced Edition v1.3)
+## Grid Combat (Enhanced Edition v1.3)
 
 ![Grid Combat Icon](docs/images/icon_gridcombat.png)
 
 This browser-based tactical strategy game pits two military factions—the Gold and Blue teams—against each other on grid-based battlefields filled with diverse terrain. Players command a variety of units including infantry, tanks, mechanized walkers, heavy armor, artillery, and rocket launchers, each possessing unique movement ranges, vision capabilities, and combat statistics that interact dynamically with environmental factors like woods, mountains, roads, and water obstacles. The gameplay emphasizes positional strategy and resource management, with units unable to move through certain terrain and defensive bonuses varying by location, while specialized infantry units serve as the only forces capable of capturing enemy headquarters to achieve victory.
 
-#### Recent Updates (v1.3)
+### Recent Updates (v1.3)
 
 -   **Advanced Strategic AI**: Implementation of a dynamic AI system featuring a desperation curve (increasing aggression when losing), conservation doctrine (preserving units during parity), and breach tactics (aggressive breakthroughs during advantage).
 -   **Game Analytics & History**: A comprehensive history system that records turn-by-turn snapshots, calculates strategic balance, and generates a visual performance chart. Data can be exported as JSON for further analysis.
@@ -73,7 +72,7 @@ The turn-based combat system features direct engagements where attackers exchang
 
 The gameplay mechanics and combat units are inspired by Advance Wars and clones. The user interface is designed for a mouse and desktop monitor, but it has limited touchscreen support for tablets with a large display.
 
-#### Gameplay
+### Gameplay
 
 Each turn, command your units in any order. Units have two fundamental states: move/attack and acted this turn. Plan carefully since there is no undo after combat resolves, although movement can be reversed if a particular unit has not engaged yet.
 
@@ -84,7 +83,7 @@ Combat Resolution:
 
 Ranged units (Artillery, Rocket) attack at distance without retaliation, but cannot move and fire in the same turn. Positioning them behind frontline units is essential.
 
-#### Units and Terrain
+### Units and Terrain
 
 | Unit | HP | Move | Vision | Range | Capture | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -103,7 +102,7 @@ Ranged units (Artillery, Rocket) attack at distance without retaliation, but can
 | **Road** | 0% | 1 | Fast movement. |
 | **Water** | - | Impassable | Impassable to ground units. |
 
-#### Damage Matrix (Base Damage)
+### Damage Matrix (Base Damage)
 
 | Attacker \ Defender | Infantry | Tank | Mech | Heavy | Artillery | Rocket |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -119,7 +118,7 @@ Ranged units (Artillery, Rocket) attack at distance without retaliation, but can
 **Victory Condition: HQ Capture.**
 HQs require 20 capture points to seize. Each turn, capturing units contribute points equal to their current HP (max 10). A full-health Infantry or Mech needs 2 turns to capture; wounded units take longer. Only Infantry and Mech can capture. If both sides lose their capturing units, then a stalemate occurs.
 
-#### Scenarios
+### Scenarios
 
 **For Training**
 - **Border Clash**: Vertical river, single central bridge. Warfare at bottleneck regions.
@@ -139,7 +138,7 @@ HQs require 20 capture points to seize. Each turn, capturing units contribute po
 
 Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized support. You might face Artillery duels, Heavy Tank breakthroughs, or Rocket ambushes. These maps are generated based on basic templates of fixed geography for variability. Randomization affects woods/plains distribution but rivers, bridges, and mountains remain fixed for AI robustness. Also, in all scenarios the units can path through friendly forces but cannot end movement on occupied tiles.
 
-#### Screenshot
+### Screenshot
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
 
