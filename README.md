@@ -144,11 +144,13 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ## Installation
 
-To run the games locally, clone this repository and serve the directory chess/ or boxes/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
+To run the games locally, clone this repository and serve the directory chess/, boxes/, or grid-combat/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
 
 ```bash
 git clone https://github.com/bob-friedman/ai-game-learning-rl.git
 ```
+
+These games may also run as files with limited or full functionality if the web browser has permission to access local files. Here is an example in Windows if they are installed in C:\GamesRL\: `file:///C:/GamesRL/boxes/index.html`.
 
 ## License
 
