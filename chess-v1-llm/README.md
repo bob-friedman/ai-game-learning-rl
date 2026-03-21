@@ -17,6 +17,17 @@ To enable the LLM opponent, you must configure a valid API key and endpoint. The
 
 The game will automatically save your configuration (excluding the API key) to the browser's local storage.
 
+## Security and Usage Warning
+
+> [!IMPORTANT]
+> **Security Risk**: If you configure the application using a `llm_config.json` file, your API key is stored in plain text within that file. If this application is served on the public internet, the `llm_config.json` file may be accessible to unauthorized users, exposing your API key.
+>
+> To protect your credentials, it is **highly recommended** to:
+> - Access the application via `file:///` protocol.
+> - Or, serve the application only to `localhost` (127.0.0.1).
+>
+> **Usage Costs**: Be aware that using LLM providers typically incurs costs per query. Users should monitor their API usage and billing through their respective provider's dashboard.
+
 ### Configuration via File (`llm_config.json`)
 
 You can also pre-configure the application by creating a file named `llm_config.json` in the same directory as `index.html`. The application will attempt to load this file automatically on startup.

@@ -48,6 +48,9 @@ Key features include:
 - **Resilient Connectivity**: Built-in retry logic and a "paused" state handle network issues or API limits without losing game progress.
 - **Detailed Logging**: A comprehensive export feature captures the full game log, including PGN, FEN, and the LLM's internal commentary for each move, which is valuable for reinforcement learning research and analysis.
 
+> [!WARNING]
+> Users should exercise caution when configuring LLM API keys. To prevent unauthorized access to your credentials, it is recommended to access the Chess v1-LLM application via `file:///` or serve to `localhost` only. Additionally, monitor your API usage as LLM queries may incur costs from your provider.
+
 ### Screenshot
 
 ![Chess LLM Screenshot 1](docs/images/screenshot_1_chess_llm.png)
