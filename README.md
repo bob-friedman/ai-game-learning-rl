@@ -34,8 +34,6 @@ Chess includes both historical and computationally curated puzzle sets. The cura
 
 ## Chess v1-LLM
 
-![Chess LLM Icon](docs/images/icon_chess_llm.png)
-
 Chess v1-LLM is an experimental version of the original Chess v1 application. While maintaining the core features of the Stockfish-powered engine, this version introduces the capability to play directly against Large Language Models (LLMs) through conformant API access.
 
 ### LLM Opponent
@@ -50,10 +48,6 @@ Key features include:
 
 > [!WARNING]
 > Users should exercise caution when configuring LLM API keys. To prevent unauthorized access to your credentials, it is recommended to access the Chess v1-LLM application via `file:///` or serve to `localhost` only. Additionally, monitor your API usage as LLM queries may incur costs from your provider.
-
-### Screenshot
-
-![Chess LLM Screenshot 1](docs/images/screenshot_1_chess_llm.png)
 
 ## Boxes
 
