@@ -32,6 +32,26 @@ Chess includes both historical and computationally curated puzzle sets. The cura
 
 ![Chess Screenshot 1](docs/images/screenshot_1_chess.png)
 
+## Chess v1-LLM
+
+![Chess LLM Icon](docs/images/icon_chess_llm.png)
+
+Chess v1-LLM is an experimental version of the original Chess v1 application. While maintaining the core features of the Stockfish-powered engine, this version introduces the capability to play directly against Large Language Models (LLMs) through conformant API access.
+
+### LLM Opponent
+
+This feature allows for a more human-like and conversational gameplay experience compared to traditional chess engines. The application supports multiple LLM providers, including Anthropic, Google Gemini, and OpenAI-compatible endpoints.
+
+Key features include:
+- **Strategic Continuity**: The LLM receives a structured history of the game, including its own past commentary, allowing it to maintain strategic and stylistic consistency throughout the match.
+- **Provider-Agnostic Integration**: A flexible configuration system supports various API formats and authentication methods.
+- **Resilient Connectivity**: Built-in retry logic and a "paused" state handle network issues or API limits without losing game progress.
+- **Detailed Logging**: A comprehensive export feature captures the full game log, including PGN, FEN, and the LLM's internal commentary for each move, which is valuable for reinforcement learning research and analysis.
+
+### Screenshot
+
+![Chess LLM Screenshot 1](docs/images/screenshot_1_chess_llm.png)
+
 ## Boxes
 
 ![Boxes Icon](docs/images/icon_boxes.png)
@@ -169,6 +189,15 @@ The core logic for the Chess game is located in `chess/game.js`. The `engineGame
 -   **`get_moves()`**: This function returns a space-separated string of all moves made in the current game, which can be useful for move analysis.
 -   **`localStorage.getItem('savedChessGame')`**: The game automatically saves the current state to the browser's local storage. This JSON object contains the FEN string, the player's color, and the AI's skill level, allowing for game resumption and data extraction.
 -   **`loadPuzzle(fen)`**: This function allows you to load a specific board position using a FEN string, which is useful for setting up specific scenarios for an AI agent to solve.
+
+### Chess v1-LLM
+
+The `chess-v1-llm/game.js` includes additional methods specifically for LLM integration:
+
+-   **`game.setLLMConfig(config)`**: Configures the LLM opponent with provider details, API keys, model selection, and system prompts.
+-   **`game.isLLMEnabled()`**: Returns a boolean indicating whether the LLM opponent is currently active.
+-   **`game.retryLLMMove()`**: Resumes a paused game by re-attempting the last LLM move request.
+-   **`game.exportLLMLog()`**: Generates a detailed JSON log of the entire match, including the LLM's commentary and strategic context for every move.
 
 ### Boxes
 

@@ -1,0 +1,21 @@
+{
+  "_readme": "Rename this file to llm_config.json and place it alongside index.html. The game loads it automatically on startup. Remove this _readme key before deploying.",
+
+  "enabled": false,
+
+  "provider": "anthropic",
+
+  "endpoint": "https://api.anthropic.com/v1/messages",
+
+  "apiKey": "YOUR_API_KEY_HERE",
+
+  "model": "claude-opus-4-6",
+
+  "anthropicVersion": "2023-06-01",
+
+  "maxTokens": 1024,
+
+  "moveDelayMs": 800,
+
+  "systemPrompt": "You are a chess grandmaster playing as {color}. Respond ONLY with a single valid JSON object: {\"move\":\"<SAN>\",\"comment\":\"<1 sentence of optional commentary>\"}. You MUST pick the move verbatim from the legalMoves array in the input. Do not output any other text, markdown, or explanation."
+}
