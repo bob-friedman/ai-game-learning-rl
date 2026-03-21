@@ -11,13 +11,11 @@
     <title>Chess v1</title>
     <style>
       h5, #evaluation { display: none; }
-
       body {
         background-color: #f0f0f0;
         margin: 0;
         font-family: sans-serif;
       }
-
       .row {
         margin-right: 0;
         margin-left: 0;
@@ -28,9 +26,7 @@
         gap: 30px;
         min-height: 87vh;
       }
-
       #pgn { height: 70px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; -webkit-overflow-scrolling: touch; width: 100%; box-sizing: border-box; }
-
       h4 {
         font-size: 1.1em;
         font-weight: bold;
@@ -39,7 +35,6 @@
         border-bottom: 1px solid #eee;
         padding-bottom: 10px;
       }
-
       .btn-soft {
         color: #333;
         background-color: #f8f9fa;
@@ -51,7 +46,6 @@
       .btn-soft:hover {
         background-color: #e2e6ea;
       }
-
       .game-controls {
         display: flex;
         flex-direction: row;
@@ -60,13 +54,11 @@
         width: 100%;
         margin-top: 5px;
       }
-
       #engineStatus {
         flex: 1;
         min-width: 0;
         overflow-wrap: break-word;
       }
-
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -92,7 +84,6 @@
         overflow-y: auto;
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       }
-
       .form-grid {
         display: grid;
         grid-template-columns: auto 1fr;
@@ -140,14 +131,22 @@
         margin-top: 10px;
         min-height: 50px;
       }
-
       #llmConfigModal .form-grid { gap: 10px; }
       #llmConfigModal textarea.form-control { resize: vertical; font-size: 0.8em; }
+      /* LLM enable toggle — greyed out while a config is active */
+      #llmEnabledRow.is-locked label,
+      #llmEnabledRow.is-locked input[type="radio"] { opacity: 0.4; pointer-events: none; cursor: default; }
+      #llmEnabledNote { display: none; font-size: 0.75em; color: #888; margin-top: 3px; }
+      #llmEnabledRow.is-locked #llmEnabledNote { display: block; }
+      /* LLM config fields — locked once a game is in progress with LLM active */
+      #llmConfigModal.game-active select,
+      #llmConfigModal.game-active input:not([type="radio"]),
+      #llmConfigModal.game-active textarea,
+      #llmConfigModal.game-active #llmSaveBtn { opacity: 0.4; pointer-events: none; }
     </style>
   </head>
   <body>
     <div class="row">
-
       <div style="width: 95vw; max-width: 450px;">
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
           <div id="board" style="width: 100%;"></div>
@@ -157,23 +156,17 @@
           </div>
         </div>
       </div>
-
     </div>
-
-    <!-- ===== MAIN MENU MODAL ===== -->
     <div id="menuModal" class="modal-overlay">
       <div class="modal-content">
         <div class="form-grid">
-
           <label></label>
           <div class="button-group">
-            <button type="button" class="btn btn-soft btn-sm" onclick="if(confirm('Restart for a new game?')) newGame()">New Game</button>
+            <button type="button" class="btn btn-soft btn-sm" onclick="confirmNewGame()">New Game</button>
             <button type="button" class="btn btn-soft btn-sm" onclick="game.undo()">Undo Move</button>
           </div>
-
           <label>Moves:</label>
           <div id="pgn"></div>
-
           <label for="moveNotation">Move:</label>
           <div class="move-controls">
             <div class="button-group">
@@ -181,7 +174,6 @@
               <button type="button" class="btn btn-soft btn-sm" onclick="game.moveNotation()">Submit</button>
             </div>
           </div>
-
           <label for="promote">Promote to:</label>
           <select id="promote" class="form-control">
             <option value=q selected>Queen</option>
@@ -189,16 +181,13 @@
             <option value=b>Bishop</option>
             <option value=n>Knight</option>
           </select>
-
           <label for="skillLevel">Skill (0-20):</label>
           <input type="number" class="form-control" id="skillLevel" value="0" min="0" max="20">
-
           <label>Play as:</label>
           <div class="radio-group">
             <label class="radio-inline"><input type="radio" name="playerColor" value="white" checked> White</label>
             <label class="radio-inline" style="margin-left:10px"><input type="radio" name="playerColor" value="black"> Black</label>
           </div>
-
           <label for="fen">FEN Position:</label>
           <div class="fen-controls">
              <div class="button-group">
@@ -208,7 +197,6 @@
             <input type="text" class="form-control" id="fen" />
           </div>
         </div>
-
         <div class="modal-footer" style="border-top: none;">
           <button type="button" style="margin-right: 10px;" class="btn btn-soft btn-sm" id="openLLMModalBtn">LLM</button>
           <button type="button" style="margin-right: 15px;" class="btn btn-soft btn-sm" id="openPuzzleModalBtn">Puzzles</button>
@@ -216,59 +204,44 @@
         </div>
       </div>
     </div>
-
-    <!-- ===== LLM CONFIG MODAL ===== -->
     <div id="llmConfigModal" class="modal-overlay">
       <div class="modal-content">
         <h4>LLM Opponent</h4>
-
         <div class="form-grid">
-
-          <!-- Enable toggle -->
           <label for="llmEnabled">Enable:</label>
-          <div>
+          <div id="llmEnabledRow">
             <label class="radio-inline">
               <input type="radio" name="llmEnabled" id="llmEnabledYes" value="true"> On
             </label>
             <label class="radio-inline" style="margin-left:12px">
               <input type="radio" name="llmEnabled" id="llmEnabledNo" value="false" checked> Off
             </label>
+            <div id="llmEnabledNote">LLM is active — click "Clear" to remove.</div>
           </div>
-
-          <!-- Provider -->
           <label for="llmProvider">Provider:</label>
           <select id="llmProvider" class="form-control">
             <option value="anthropic" selected>Anthropic (Claude)</option>
             <option value="gemini">Google Gemini</option>
             <option value="openai">OpenAI-compatible</option>
           </select>
-
-          <!-- Endpoint -->
           <label for="llmEndpoint">Endpoint:</label>
           <input type="text" class="form-control" id="llmEndpoint"
                  placeholder="https://api.anthropic.com/v1/messages" />
-
-          <!-- API Key -->
           <label for="llmApiKey">API Key:</label>
-          <input type="password" class="form-control" id="llmApiKey"
-                 placeholder="sk-ant-..." autocomplete="off" />
-
-          <!-- Model -->
+          <div>
+            <input type="password" class="form-control" id="llmApiKey"
+                   placeholder="sk-ant-..." autocomplete="off" />
+            <small id="llmNoKeyWarning" style="display:none;">LLM is On but no API key is entered — Stockfish will play instead.</small>
+          </div>
           <label for="llmModel">Model:</label>
           <input type="text" class="form-control" id="llmModel"
                  placeholder="claude-opus-4-6" />
-
-          <!-- Move delay -->
           <label for="llmDelay">Delay (ms):</label>
           <input type="number" class="form-control" id="llmDelay"
                  value="800" min="0" max="5000" step="100" />
-
-          <!-- System prompt -->
           <label for="llmPrompt" style="align-self:start; padding-top:4px;">System<br>Prompt:</label>
           <textarea class="form-control" id="llmPrompt" rows="4"
                     placeholder="Optional — leave blank for default chess grandmaster prompt."></textarea>
-
-          <!-- Load from JSON file -->
           <label for="llmFileInput">Load JSON:</label>
           <div>
             <input type="file" id="llmFileInput" accept=".json" style="font-size:0.82em; width:100%;" />
@@ -276,25 +249,18 @@
               Load a <code>llm_config.json</code> file to fill all fields above.
             </div>
           </div>
-
-          <!-- Save / Apply buttons -->
           <label></label>
           <div class="button-group">
             <button type="button" class="btn btn-soft btn-sm" id="llmSaveBtn">Apply &amp; Save</button>
             <button type="button" class="btn btn-soft btn-sm" id="llmClearBtn">Clear</button>
           </div>
-
         </div>
-
         <button type="button" class="btn btn-soft btn-sm" style="margin-top: 10px; width: 100%;" id="llmExportBtn">Export Move Log</button>
-
         <div class="modal-footer" style="border-top: none; margin-top: 12px;">
           <button id="closeLLMModalBtn" class="btn btn-soft">Close</button>
         </div>
       </div>
     </div>
-
-    <!-- ===== PUZZLE MODAL ===== -->
     <div id="puzzleModal" class="modal-overlay">
       <div class="modal-content">
         <h4>Puzzle Selection</h4>
@@ -311,20 +277,48 @@
         </div>
       </div>
     </div>
-
 <script src="game.js"></script>
     <script>
       var game;
       var newGame = function (){};
       let currentPuzzleFen = null;
-
       $(document).ready(function() {
         $('#board').on('contextmenu', function(e) { e.preventDefault(); });
-
         // ---------------------------------------------------------------
         // LLM CONFIG HELPERS
         // ---------------------------------------------------------------
-
+        /** Lock/unlock the Enable radio buttons — greyed out when an LLM config is active. */
+        function setLLMEnabledLock(locked) {
+          locked
+            ? $('#llmEnabledRow').addClass('is-locked')
+            : $('#llmEnabledRow').removeClass('is-locked');
+        }
+        function setLLMGameActive(active) {
+          active
+            ? $('#llmConfigModal').addClass('game-active')
+            : $('#llmConfigModal').removeClass('game-active');
+        }
+        /**
+         * New Game with optional LLM teardown.
+         * Step 1 — confirm restart.
+         * Step 2 — if LLM is active, ask whether to disable it for the new game.
+         *          The user can keep it on (just hit Cancel on the second prompt)
+         *          or clear it cleanly without needing a browser refresh.
+         */
+        window.confirmNewGame = function() {
+          if (!confirm('Restart for a new game?')) return;
+          if (game.isLLMEnabled()) {
+            if (confirm('LLM opponent is active.\nDisable it for the new game?')) {
+              game.setLLMConfig(null);
+              localStorage.removeItem('llmConfig');
+              applyConfigToForm({ enabled: false });
+              $('#llmApiKey').val('');
+              setLLMEnabledLock(false);
+              setLLMGameActive(false);
+            }
+          }
+          newGame();
+        };
         /** Read the form fields into a config object. */
         function readLLMForm() {
           return {
@@ -337,7 +331,6 @@
             systemPrompt: $('#llmPrompt').val().trim()
           };
         }
-
         /** Populate the form fields from a config object. */
         function applyConfigToForm(cfg) {
           $('input[name="llmEnabled"][value="' + (cfg.enabled ? 'true' : 'false') + '"]').prop('checked', true);
@@ -348,7 +341,6 @@
           $('#llmDelay').val(cfg.moveDelayMs !== undefined ? cfg.moveDelayMs : 800);
           $('#llmPrompt').val(cfg.systemPrompt || '');
         }
-
         /** Push the config into the engine and persist to localStorage. */
         function applyAndSaveLLMConfig(cfg) {
           game.setLLMConfig(cfg);
@@ -358,7 +350,6 @@
             localStorage.setItem('llmConfig', JSON.stringify(toStore));
           } catch(e) { console.warn('[LLM] Could not persist config:', e); }
         }
-
         // ---------------------------------------------------------------
         // LLM: Auto-load llm_config.json on page load
         // ---------------------------------------------------------------
@@ -371,6 +362,12 @@
             applyConfigToForm(cfg);
             if (cfg.enabled && cfg.apiKey) {
               applyAndSaveLLMConfig(cfg);
+              setLLMEnabledLock(true);
+              setLLMGameActive(true);
+            } else if (cfg.enabled && !cfg.apiKey) {
+              // Push config into engine without persisting, so displayStatus can
+              // show the no-key warning immediately on startup.
+              game.setLLMConfig(cfg);
             }
           })
           .catch(function() {
@@ -380,20 +377,23 @@
               if (stored) applyConfigToForm(stored);
             } catch(_) {}
           });
-
         // ---------------------------------------------------------------
         // LLM MODAL: open / close
         // ---------------------------------------------------------------
         $('#openLLMModalBtn').on('click', function() {
+          var onSelected = $('input[name="llmEnabled"]:checked').val() === 'true';
+          var hasKey     = $('#llmApiKey').val().trim() !== '';
+          $('#llmNoKeyWarning').toggle(onSelected && !hasKey);
+          setLLMEnabledLock(game.isLLMEnabled());
           $('#llmConfigModal').addClass('is-visible');
+        });
+        $('#llmApiKey').on('input', function() {
+          var onSelected = $('input[name="llmEnabled"]:checked').val() === 'true';
+          $('#llmNoKeyWarning').toggle(onSelected && $(this).val().trim() === '');
         });
         $('#closeLLMModalBtn').on('click', function() {
           $('#llmConfigModal').removeClass('is-visible');
         });
-        $('#llmConfigModal').on('click', function(e) {
-          if (e.target === this) $(this).removeClass('is-visible');
-        });
-
         // ---------------------------------------------------------------
         // LLM MODAL: load from file
         // ---------------------------------------------------------------
@@ -415,7 +415,6 @@
           // Reset file input so same file can be re-loaded
           this.value = '';
         });
-
         // ---------------------------------------------------------------
         // LLM MODAL: Apply & Save
         // ---------------------------------------------------------------
@@ -426,6 +425,8 @@
             return;
           }
           applyAndSaveLLMConfig(cfg);
+          setLLMEnabledLock(cfg.enabled);
+          setLLMGameActive(cfg.enabled);
           var logLine = cfg.enabled
             ? 'LLM enabled: ' + (cfg.model || 'default') + ' (' + (cfg.provider || 'anthropic') + ')'
             : 'LLM disabled.';
@@ -433,7 +434,6 @@
           $('#pgn').scrollTop($('#pgn')[0].scrollHeight);
           $('#llmConfigModal').removeClass('is-visible');
         });
-
         // ---------------------------------------------------------------
         // LLM MODAL: Clear
         // ---------------------------------------------------------------
@@ -442,9 +442,10 @@
           localStorage.removeItem('llmConfig');
           applyConfigToForm({ enabled: false });
           $('#llmApiKey').val('');
+          setLLMEnabledLock(false);
+          setLLMGameActive(false);
           $('#engineStatus').html('LLM config cleared.');
         });
-
         // ---------------------------------------------------------------
         // LLM MODAL: Export move log
         // ---------------------------------------------------------------
@@ -458,12 +459,10 @@
           a.click();
           URL.revokeObjectURL(url);
         });
-
         // ---------------------------------------------------------------
         // PUZZLE LOGIC (unchanged from original)
         // ---------------------------------------------------------------
         let sessionPuzzles = null;
-
         const categoryDescriptions = {
           "Random Mate Puzzles": "Find the key move that forces checkmate in two moves against any defense.",
           "Area Denial / Strongpoint Defense": "Restrict key enemy pieces & control important squares to establish a dominant position.",
@@ -472,7 +471,6 @@
           "Tactical Combination / Removing Defender": "Remove a key defender to enable a decisive attack, win material, or to checkmate.",
           "Historical Games": "Find the brilliant, game-winning move from a famous historical chess match."
         };
-
         const themedPuzzles = [
             {
                 category: "Area Denial / Strongpoint Defense",
@@ -491,11 +489,9 @@
                 puzzles: [ { fen: "r1b1k2r/pp1n1ppp/2p1p3/q7/1b1P4/P1n2N2/1P1BPPPP/R2QKB1R w KQkq - 0 10" }, { fen: "1r3rk1/pb2qppp/1p2p3/2n1N3/2P5/P5P1/1Q2PPBP/3R1RK1 w - - 0 19" }, { fen: "2r3k1/p4p1p/1p2p1p1/3q4/3b1P2/1Pr3P1/P2RQ2P/3R2K1 w - - 0 29" } ]
             }
         ];
-
         const historicalPuzzles = [
           { text: "Buckle vs NN, London, 1840", fen: "r2qkb1r/pp2nppp/3p4/2pNN1B1/2BnP3/3P4/PPP2PPP/R2bK2R w KQkq - 1 1" }, { text: "Paulsen vs Blachy, New York, 1857", fen: "1rb4r/pkPp3p/1b1P3n/1Q6/N3Pp2/8/P1P3PP/7K w - - 1 1" }, { text: "Morphy vs Isouard, Paris, 1858", fen: "4kb1r/p2n1ppp/4q3/4p1B1/4P3/1Q6/PPP2PPP/2KR4 w k - 1 1" }, { text: "Zukertort vs Anderssen, Breslau, 1865", fen: "r1b2k1r/ppp1bppp/8/1B1Q4/5q2/2P5/PPP2PPP/R3R1K1 w - - 1 1" }, { text: "Neumann vs Mayet, Berlin, 1866", fen: "5rkr/pp2Rp2/1b1p1Pb1/3P2Q1/2n3P1/2p5/P4P2/4R1K1 w - - 1 1" }, { text: "Blackburne vs Martin, England, 1876", fen: "1r1kr3/Nbppn1pp/1b6/8/6Q1/3B1P2/Pq3P1P/3RR1K1 w - - 1 1" }, { text: "Paulsen vs Anderssen, Frankfurt, 1878", fen: "5rk1/1p1q2bp/p2pN1p1/2pP2Bn/2P3P1/1P6/P4QKP/5R2 w - - 1 1" }, { text: "Blackburne vs Smith, Simul, 1882", fen: "r1nk3r/2b2ppp/p3b3/3NN3/Q2P3q/B2B4/P4PPP/4R1K1 w - - 1 1" }, { text: "Steinitz vs Sands, New York, 1887", fen: "r4br1/3b1kpp/1q1P4/1pp1RP1N/p7/6Q1/PPB3PP/2KR4 w - - 1 1" }, { text: "Steinitz vs Hodges, New York, 1891", fen: "r1b2k1r/ppppq3/5N1p/4P2Q/4PP2/1B6/PP5P/n2K2R1 w - - 1 1" }, { text: "Tarrasch vs Fiedler, Nuremberg, 1892", fen: "r2q1b1r/1pN1n1pp/p1n3k1/4Pb2/2BP4/8/PPP3PP/R1BQ1RK1 w - - 1 1" }, { text: "Pillsbury vs Rodgers, New York 1893", fen: "3q2r1/4n2k/p1p1rBpp/PpPpPp2/1P3P1Q/2P3R1/7P/1R5K w - - 1 1" }, { text: "Tarrasch vs Kurschner, Nuremberg, 1893", fen: "r2qk2r/pb4pp/1n2Pb2/2B2Q2/p1p5/2P5/2B2PPP/RN2R1K1 w - - 1 1" }, { text: "Teed vs Delmar, New York, 1896", fen: "rnbqkbn1/ppppp3/7r/6pp/3P1p2/3BP1B1/PPP2PPP/RN1QK1NR w - - 1 1" }, { text: "Steinitz vs Trenchard, Vienna, 1898", fen: "r2qrb2/p1pn1Qp1/1p4Nk/4PR2/3n4/7N/P5PP/R6K w - - 1 1" }, { text: "Nimzowitsch vs Neumann, Riga, 1899", fen: "r1b3nr/ppqk1Bbp/2pp4/4P1B1/3n4/3P4/PPP2QPP/R4RK1 w - - 1 1" }, { text: "Pillsbury vs Tinsley, London, 1899", fen: "3k1r1r/pb3p2/1p4p1/1B2B3/3qn3/6QP/P4RP1/2R3K1 w - - 1 1" }, { text: "Ryder vs NN, Leipzig, 1899", fen: "rn2kb1r/1pQbpppp/1p6/qp1N4/6n1/8/PPP3PP/2KR2NR w - - 1 1" }, { text: "Pulitzer vs Marco, Vienna, 1900", fen: "r2k2nr/pp1b1Q1p/2n4b/3N4/3q4/3P4/PPP3PP/4RR1K w - - 1 1" }, { text: "Lasker vs NN, Manchester, 1903", fen: "r2q2nr/5p1p/p1Bp3b/1p1NkP2/3pP1p1/2PP2P1/PP5P/R1Bb1RK1 w - - 1 1" }
         ];
-
         function populatePuzzleList() {
             const puzzleSelect = $('#puzzleSelect');
             puzzleSelect.empty();
@@ -519,7 +515,6 @@
             });
             puzzleSelect.append(historicalGroup);
         }
-
         function loadAndDisplayPuzzles(forceRefresh = false) {
             if (sessionPuzzles && !forceRefresh) { populatePuzzleList(); return; }
             fetch('puzzles.json')
@@ -535,12 +530,9 @@
                     populatePuzzleList();
                 });
         }
-
         // Modal visibility controls (existing)
         $('#toggleBtn').on('click', function() { $('#menuModal').addClass('is-visible'); });
         $('#closeModalBtn').on('click', function() { $('#menuModal').removeClass('is-visible'); });
-        $('#menuModal').on('click', function(e) { if (e.target === this) $(this).removeClass('is-visible'); });
-
         $('#getBestMoveBtn').on('click', function() {
           const currentFen = game.getCurrentFen();
           if (currentFen) {
@@ -548,7 +540,6 @@
             game.getBestMove(currentFen, function(san) { $('#bestMoveInput').val(san); });
           }
         });
-
         $('#openPuzzleModalBtn').on('click', function() {
           loadAndDisplayPuzzles();
           if (currentPuzzleFen) $('#puzzleSelect').val(currentPuzzleFen);
@@ -557,15 +548,12 @@
         });
         $('#shufflePuzzlesBtn').on('click', function() { loadAndDisplayPuzzles(true); });
         $('#closePuzzleModalBtn').on('click', function() { $('#puzzleModal').removeClass('is-visible'); });
-        $('#puzzleModal').on('click', function(e) { if (e.target === this) $(this).removeClass('is-visible'); });
-
         $('#puzzleSelect').on('change', function() {
             const selectedOption = $(this).find('option:selected');
             const categoryName = selectedOption.data('category');
             const description = categoryDescriptions[categoryName] || 'Select a puzzle to see its objective.';
             $('#puzzleDescription').text(description);
         });
-
         $('#loadPuzzleBtn').on('click', function() {
           const selectedFen = $('#puzzleSelect').val();
           if (selectedFen) {
@@ -577,7 +565,6 @@
           }
         });
       });
-
       // ---------------------------------------------------------------
       // Game setup (unchanged)
       // ---------------------------------------------------------------
@@ -592,7 +579,6 @@
             game.start();
             $('#menuModal').removeClass('is-visible');
         }
-
         try {
            const savedGameJSON = localStorage.getItem('savedChessGame');
            if (savedGameJSON) {
@@ -609,7 +595,6 @@
              newGame();
           }
       }
-
       function initializeEngine() {
         console.warn("Using asm.js version of chess engine.");
         var script_tag = document.createElement("script");
@@ -621,7 +606,6 @@
         };
         document.getElementsByTagName("head")[0].appendChild(script_tag);
       }
-
       document.addEventListener("DOMContentLoaded", initializeEngine);
     </script>
   </body>
