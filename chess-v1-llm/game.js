@@ -8,18 +8,11 @@ function engineGame(options) {
     var time = {};
     var playerColor = 'white';
     var isEngineRunning = false;
-
-    // -------------------------------------------------------------------------
-    // LLM OPPONENT STATE
-    // -------------------------------------------------------------------------
-    var llmConfig  = null;  // Set via setLLMConfig()
-    var llmMoveLog = [];    // [{moveNumber, color, fen, move, comment}] — full game log
-
-    // Retry / pause state — reset each time a new LLM move attempt starts
+    var llmConfig  = null;
+    var llmMoveLog = [];
     var llmRetryCount  = 0;
-    var llmIsPaused    = false;   // true after all retries exhausted; board stays locked
-    var llmPausedFen   = null;    // FEN we were trying to move from — used by retryLLMMove()
-
+    var llmIsPaused    = false;
+    var llmPausedFen   = null;
     var engineStatus = {
         engineLoaded: false,
         engineReady:  false,
@@ -27,25 +20,15 @@ function engineGame(options) {
         score:        null,
         pv:           null
     };
-
-    // -------------------------------------------------------------------------
-    // LLM: Build structured move-history array
-    // -------------------------------------------------------------------------
-    // Returns an array like:
-    //   [{moveNumber:1, white:"e4", black:"e5"}, {moveNumber:2, white:"Nf3", black:null}]
-    // with the LLM's own commentary spliced in for whichever half-moves it played.
     function buildMoveHistory() {
         var history = game.history({ verbose: true });
         var result  = [];
-
-        // Index llmMoveLog by move SAN for fast comment lookup
         var commentByMove = {};
         for (var k = 0; k < llmMoveLog.length; k++) {
             if (llmMoveLog[k].comment) {
                 commentByMove[llmMoveLog[k].move] = llmMoveLog[k].comment;
             }
         }
-
         for (var i = 0; i < history.length; i += 2) {
             var wMove = history[i];
             var bMove = history[i + 1] || null;
@@ -59,40 +42,19 @@ function engineGame(options) {
         }
         return result;
     }
-
-    // -------------------------------------------------------------------------
-    // LLM: Build the full request payload for one turn
-    // -------------------------------------------------------------------------
     function buildLLMPayload() {
         var rawHistory = game.history({ verbose: true });
         var turnColor  = game.turn() === 'w' ? 'white' : 'black';
         var moveNumber = Math.ceil((rawHistory.length + 1) / 2);
-
         return {
-            // Authoritative board state
             fen:         game.fen(),
-
-            // Human-readable PGN (kept for models that parse it naturally)
             pgn:         game.pgn() || '(game start)',
-
-            // *** Structured history — the primary context source ***
-            // Each entry covers one full move (white + black half-moves).
-            // The LLM's own past commentary is attached to the relevant half-move
-            // so it can maintain stylistic and strategic continuity.
             moveHistory: buildMoveHistory(),
-
-            // Whose turn it is and what move number we are on
             turn:        turnColor,
             moveNumber:  moveNumber,
-
-            // Exhaustive legal-move list in SAN — the LLM MUST choose from this
             legalMoves:  game.moves()
         };
     }
-
-    // -------------------------------------------------------------------------
-    // LLM: HTTP helpers (provider-agnostic)
-    // -------------------------------------------------------------------------
     function buildLLMHeaders(cfg) {
         var headers  = { 'Content-Type': 'application/json' };
         var provider = (cfg.provider || 'anthropic').toLowerCase();
@@ -101,31 +63,25 @@ function engineGame(options) {
             headers['anthropic-version']                         = cfg.anthropicVersion || '2023-06-01';
             headers['anthropic-dangerous-direct-browser-access'] = 'true';
         } else if (provider === 'gemini') {
-            // Gemini authenticates via ?key= query param in the endpoint URL — no auth header
         } else {
             headers['Authorization'] = 'Bearer ' + cfg.apiKey;
         }
         return headers;
     }
-
-    /** For Gemini the API key must be appended to the endpoint URL as ?key=... */
     function buildLLMEndpoint(cfg) {
         var provider = (cfg.provider || 'anthropic').toLowerCase();
         var endpoint = cfg.endpoint || 'https://api.anthropic.com/v1/messages';
         if (provider === 'gemini' && cfg.apiKey) {
-            // Avoid doubling the key if the user already embedded it
             if (endpoint.indexOf('key=') === -1) {
                 endpoint += (endpoint.indexOf('?') === -1 ? '?' : '&') + 'key=' + cfg.apiKey;
             }
         }
         return endpoint;
     }
-
     function buildLLMRequestBody(cfg, payload) {
         var turn     = payload.turn;
         var provider = (cfg.provider || 'anthropic').toLowerCase();
         var model    = cfg.model || 'claude-opus-4-6';
-
         var defaultSystemPrompt =
             'You are a chess grandmaster playing as ' + turn + '. ' +
             'You will receive a JSON object with four key fields:\n' +
@@ -141,13 +97,10 @@ function engineGame(options) {
             'The move value MUST be copied verbatim from the "legalMoves" array. ' +
             'Do not invent, abbreviate, or alter move notation. ' +
             'Return absolutely nothing else — no markdown, no explanation.';
-
         var systemPrompt = cfg.systemPrompt
             ? cfg.systemPrompt.replace('{color}', turn)
             : defaultSystemPrompt;
-
         var userContent = JSON.stringify(payload, null, 2);
-
         if (provider === 'anthropic') {
             return JSON.stringify({
                 model:      model,
@@ -156,7 +109,6 @@ function engineGame(options) {
                 messages:   [{ role: 'user', content: userContent }]
             });
         } else if (provider === 'gemini') {
-            // Gemini: model is in the endpoint URL; body uses contents[] + systemInstruction
             return JSON.stringify({
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 contents:          [{ parts: [{ text: userContent }] }],
@@ -173,7 +125,6 @@ function engineGame(options) {
             });
         }
     }
-
     function extractLLMText(cfg, data) {
         var provider = (cfg.provider || 'anthropic').toLowerCase();
         if (provider === 'anthropic') {
@@ -189,10 +140,6 @@ function engineGame(options) {
                    data.choices[0].message && data.choices[0].message.content;
         }
     }
-
-    // -------------------------------------------------------------------------
-    // LLM: Parse the raw response text into {move, comment}
-    // -------------------------------------------------------------------------
     function parseLLMResponse(text) {
         text = text.trim()
                    .replace(/^```(?:json)?\s*/i, '')
@@ -209,7 +156,6 @@ function engineGame(options) {
             throw new Error('Cannot parse LLM response as JSON: ' + text.slice(0, 120));
         }
     }
-
     // -------------------------------------------------------------------------
     // LLM: Show paused / error status with a Retry button
     //
@@ -227,42 +173,24 @@ function engineGame(options) {
             '<br><small style="color:#888;">' + errMsg + '</small>'
         );
     }
-
-    // -------------------------------------------------------------------------
-    // LLM: Core move-fetch — NO Stockfish fallback
-    //
-    // Retry schedule (configurable via llmConfig.maxRetries, default 3):
-    //   attempt 1  — immediate
-    //   attempt 2  — 2 s delay
-    //   attempt 3  — 5 s delay
-    //   …after maxRetries: pause game, surface Retry button
-    // -------------------------------------------------------------------------
-    var LLM_RETRY_DELAYS = [0, 2000, 5000, 10000]; // ms before each attempt index
-
+    var LLM_RETRY_DELAYS = [0, 2000, 5000, 10000];
     function fetchLLMMove() {
         if (!llmConfig || !llmConfig.enabled) {
             console.warn('[LLM] fetchLLMMove called but LLM is not configured/enabled.');
             isEngineRunning = false;
             return;
         }
-
         var maxRetries = (llmConfig.maxRetries !== undefined)
             ? parseInt(llmConfig.maxRetries, 10)
             : 3;
-
         var endpoint = buildLLMEndpoint(llmConfig);
         var attempt  = llmRetryCount + 1;
-
         var statusPrefix = attempt > 1
             ? 'LLM thinking&hellip; (retry ' + attempt + '/' + maxRetries + ')'
             : 'LLM opponent thinking&hellip;';
         $('#engineStatus').html(statusPrefix);
-
-        // Snapshot the FEN we are attempting from — used if we need to pause/retry
         llmPausedFen = game.fen();
-
         var payload = buildLLMPayload();
-
         fetch(endpoint, {
             method:  'POST',
             headers: buildLLMHeaders(llmConfig),
@@ -279,14 +207,9 @@ function engineGame(options) {
         .then(function(data) {
             var rawText = extractLLMText(llmConfig, data);
             if (!rawText) throw new Error('Empty content in LLM response.');
-
             var moveData = parseLLMResponse(rawText);
             if (!moveData || !moveData.move) throw new Error('No "move" key in LLM JSON.');
-
-            // Try SAN first
             var applied = game.move(moveData.move);
-
-            // Fallback: try UCI-style (e2e4) in case LLM ignored the SAN list
             if (!applied) {
                 var legalVerbose = game.moves({ verbose: true });
                 var uciMatch = legalVerbose.find(function(m) {
@@ -296,14 +219,11 @@ function engineGame(options) {
                     applied = game.move({ from: uciMatch.from, to: uciMatch.to, promotion: uciMatch.promotion });
                 }
             }
-
             if (!applied) throw new Error('LLM returned illegal move: "' + moveData.move + '"');
-
             // ---- SUCCESS ----
             llmRetryCount = 0;
             llmIsPaused   = false;
             llmPausedFen  = null;
-
             // Record in the log (referenced by buildMoveHistory on every subsequent call)
             var rawHistory = game.history({ verbose: true });
             llmMoveLog.push({
@@ -313,23 +233,18 @@ function engineGame(options) {
                 move:       applied.san,
                 comment:    moveData.comment || ''
             });
-
             isEngineRunning = false;
             $('button[onclick="game.undo()"]').prop('disabled', false);
-
             if (moveData.comment) {
                 $('#engineStatus').html('LLM: ' + moveData.comment);
                 setTimeout(displayStatus, 4000);
             }
-
             saveGameState();
             prepareMove();
         })
         .catch(function(err) {
             console.error('[LLM] Attempt ' + attempt + ' failed:', err.message);
-
             if (llmRetryCount < maxRetries - 1) {
-                // Schedule next retry
                 llmRetryCount++;
                 var delay = LLM_RETRY_DELAYS[Math.min(llmRetryCount, LLM_RETRY_DELAYS.length - 1)];
                 $('#engineStatus').html(
@@ -338,22 +253,14 @@ function engineGame(options) {
                 );
                 setTimeout(fetchLLMMove, delay);
             } else {
-                // All retries exhausted — PAUSE the game, do NOT touch board state
                 llmRetryCount = 0;
                 llmIsPaused   = true;
-                // isEngineRunning stays true so the board remains locked
-                // (player cannot drag pieces while the LLM turn is unresolved)
                 $('button[onclick="game.undo()"]').prop('disabled', false);
                 showLLMPausedStatus(err.message.slice(0, 120));
                 console.warn('[LLM] Game paused. Call game.retryLLMMove() to resume.');
             }
         });
     }
-
-    // -------------------------------------------------------------------------
-    // Existing infrastructure (unchanged)
-    // -------------------------------------------------------------------------
-
     var isDisplayThrottled = false;
     function throttledDisplayStatus() {
         if (!isDisplayThrottled) {
@@ -362,7 +269,6 @@ function engineGame(options) {
             setTimeout(function() { isDisplayThrottled = false; }, 250);
         }
     }
-
     var onDragStart = function(source, piece, position, orientation) {
         if (game.game_over() || isEngineRunning ||
             (game.turn() === 'w' && playerColor !== 'white') ||
@@ -370,20 +276,16 @@ function engineGame(options) {
             return false;
         }
     };
-
     function uciCmd(cmd, which) { (which || engine).postMessage(cmd); }
     uciCmd('uci');
-
     function displayStatus() {
         var opponentLabel = (llmConfig && llmConfig.enabled)
             ? 'LLM (' + (llmConfig.model || 'default') + ')'
             : 'Engine';
-
         var status = opponentLabel + ': ';
         if      (!engineStatus.engineLoaded) status += 'Loading...';
         else if (!engineStatus.engineReady)  status += 'Loaded...';
         else                                 status += 'On.';
-
         if (engineStatus.search && !(llmConfig && llmConfig.enabled)) {
             status += ' ' + engineStatus.search.replace(/Depth: \d+ Nps: \d+/, '');
         }
@@ -392,7 +294,6 @@ function engineGame(options) {
             if (!scoreText.startsWith('Checkmate')) scoreText = 'Score: ' + scoreText;
             status += ' | ' + scoreText;
         }
-
         var gameStatusText = '';
         if (game.game_over()) {
             if      (game.in_checkmate())             gameStatusText = 'Checkmate!';
@@ -403,12 +304,10 @@ function engineGame(options) {
         } else if (game.in_check()) {
             gameStatusText = 'Check! ';
         }
-
         var turn       = game.turn() === 'w' ? 'White' : 'Black';
         var turnStatus = game.game_over() ? '' : turn + ' to move.';
         $('#engineStatus').html(status + ' ' + gameStatusText + turnStatus);
     }
-
     function saveGameState() {
         try {
             if (!game.game_over()) {
@@ -422,29 +321,24 @@ function engineGame(options) {
             }
         } catch (e) { console.error('Could not save game to localStorage.', e); }
     }
-
     function prepareMove() {
         $('#pgn').text(game.pgn());
         $('#pgn').scrollTop($('#pgn')[0].scrollHeight);
         board.position(game.fen());
         displayStatus();
-
         var turn = game.turn() == 'w' ? 'white' : 'black';
         if (!game.game_over()) {
             if (turn != playerColor) {
                 $('button[onclick="game.undo()"]').prop('disabled', true);
                 isEngineRunning = true;
-                llmRetryCount   = 0;   // fresh attempt counter for this move
+                llmRetryCount   = 0;
                 llmIsPaused     = false;
-
                 if (llmConfig && llmConfig.enabled) {
-                    // LLM branch — delay is configurable, default 800 ms
                     var delay = (llmConfig.moveDelayMs !== undefined)
                         ? llmConfig.moveDelayMs
                         : 800;
                     setTimeout(fetchLLMMove, delay);
                 } else {
-                    // Stockfish branch (original)
                     setTimeout(function() {
                         var goCommand = 'go';
                         if (time.depth)         goCommand += ' depth '    + time.depth;
@@ -456,7 +350,6 @@ function engineGame(options) {
             }
         }
     }
-
     engine.onmessage = function(event) {
         var line = event.data || event;
         if (line === 'uciok') {
@@ -495,7 +388,6 @@ function engineGame(options) {
         }
         displayStatus();
     };
-
     var onDrop = function(source, target) {
         var moveCfg = { from: source, to: target, promotion: undefined };
         var piece = game.get(source);
@@ -509,15 +401,9 @@ function engineGame(options) {
         saveGameState();
         prepareMove();
     };
-
     var onSnapEnd = function() { board.position(game.fen()); };
-
     var cfg = { draggable: true, position: 'start', onDragStart, onDrop, onSnapEnd };
     board = new ChessBoard('board', cfg);
-
-    // -------------------------------------------------------------------------
-    // Public API
-    // -------------------------------------------------------------------------
     return {
         reset: function() {
             game.reset();
@@ -551,7 +437,6 @@ function engineGame(options) {
         },
         start: function() { this.reset(); },
         undo: function() {
-            // Allow undo even when paused, so the player can back out of a stuck position
             if (isEngineRunning && !llmIsPaused) return false;
             if (game.history().length < 2) return false;
             game.undo();
@@ -660,11 +545,6 @@ function engineGame(options) {
             uciCmd('position fen ' + fen);
             uciCmd('go movetime 3000');
         },
-
-        // -------------------------------------------------------------------
-        // LLM PUBLIC API
-        // -------------------------------------------------------------------
-
         setLLMConfig: function(config) {
             if (!config || typeof config !== 'object') {
                 llmConfig = null;
@@ -675,23 +555,16 @@ function engineGame(options) {
             console.log('[LLM] Config set. Enabled:', !!config.enabled,
                         '| Model:', config.model || '(default)',
                         '| maxRetries:', config.maxRetries !== undefined ? config.maxRetries : 3);
+            if (config.enabled) {
+                console.info('[LLM] LLM opponent is now active. The Enable/Disable toggle is ' +
+                             'locked in the UI while a config is loaded. Use "Clear" in the LLM ' +
+                             'panel, or start a New Game, to deactivate the LLM opponent.');
+            }
             displayStatus();
         },
-
         isLLMEnabled: function() {
             return !!(llmConfig && llmConfig.enabled);
         },
-
-        /**
-         * Resume a paused LLM game.
-         *
-         * Called from the Retry button injected into #engineStatus,
-         * or programmatically at any time. Safe to call even if the
-         * game is not paused — it will be a no-op in that case.
-         *
-         * Board state has NOT been touched during the pause, so the game
-         * simply re-attempts the same LLM call from the same position.
-         */
         retryLLMMove: function() {
             if (!llmIsPaused) {
                 console.log('[LLM] retryLLMMove called but game is not paused — no-op.');
@@ -700,27 +573,17 @@ function engineGame(options) {
             console.log('[LLM] Resuming paused game from FEN:', llmPausedFen);
             llmRetryCount = 0;
             llmIsPaused   = false;
-            // isEngineRunning is still true from the paused state — correct
             $('button[onclick="game.undo()"]').prop('disabled', true);
             fetchLLMMove();
         },
-
-        /**
-         * Export a complete, self-contained game log.
-         *
-         * Includes the full PGN, current FEN, model used, and for every LLM
-         * move: the exact position (FEN), the SAN move played, and the LLM's
-         * commentary. moveHistory mirrors the structured payload sent each turn,
-         * so a consumer can reconstruct the LLM's perspective at any point.
-         */
         exportLLMLog: function() {
             return JSON.stringify({
                 model:       llmConfig ? (llmConfig.model || 'unknown') : 'none',
                 playerColor: playerColor,
                 pgn:         game.pgn(),
                 currentFen:  game.fen(),
-                moveHistory: buildMoveHistory(),   // same structure sent to LLM each turn
-                llmMoves:    llmMoveLog,           // LLM-side record with commentary
+                moveHistory: buildMoveHistory(),
+                llmMoves:    llmMoveLog,
                 exported:    new Date().toISOString()
             }, null, 2);
         }
