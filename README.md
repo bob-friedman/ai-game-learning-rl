@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17273372.svg)](https://doi.org/10.5281/zenodo.17273372)
 
 This repository has a collection of open-source games designed for use in reinforcement learning (RL) research and development. The games provide diverse environments for training and testing AI agents, with a focus on strategic thinking, puzzle-solving, and tactical gameplay. These features allow for adaptation for the generation of data that is used in training an AI model by the methods of reinforcement learning.
-
+___
 ## Chess
 
 ![Chess Icon](docs/images/icon_chess.png)
@@ -27,11 +27,10 @@ Chess includes both historical and computationally curated puzzle sets. The cura
 -   [https://www.wtharvey.com/m8n2.txt](https://www.wtharvey.com/m8n2.txt)
 -   [https://database.lichess.org/#puzzles](https://database.lichess.org/#puzzles)
 
-
 ### Screenshot
 
 ![Chess Screenshot 1](docs/images/screenshot_1_chess.png)
-
+___
 ## Chess v1-LLM
 
 ![Chess Icon](docs/images/icon_chess_llm.png)
@@ -51,6 +50,10 @@ Key features include:
 > [!WARNING]
 > Users should exercise caution when configuring LLM API keys. To prevent unauthorized access to your credentials, it is recommended to access the Chess v1-LLM application via `file:///` or serve to `localhost` only. Additionally, monitor your API usage as LLM queries may incur costs from your provider.
 
+### Screenshot
+
+![Chess Screenshot 1](docs/images/screenshot_1_chess_llm.png)
+___
 ## Boxes
 
 ![Boxes Icon](docs/images/icon_boxes.png)
@@ -71,7 +74,7 @@ Boxes supports multiple control schemes to accommodate different platforms and p
 ### Screenshot
 
 ![Boxes Screenshot](docs/images/screenshot_1_boxes.png)
-
+___
 ## Grid Combat (Enhanced Edition v1.3)
 
 ![Grid Combat Icon](docs/images/icon_gridcombat.png)
@@ -160,7 +163,7 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 ### Screenshot
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
-
+___
 ## Installation
 
 To run the games locally, clone this repository and serve the directory chess/, boxes/, or grid-combat/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
