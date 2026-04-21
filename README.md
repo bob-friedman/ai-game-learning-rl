@@ -163,6 +163,73 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 ### Screenshot
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
+
+### Autoresearch — Autonomous AI Improvement
+
+This section documents an autonomous research system developed for iterative improvement of the Grid Combat AI heuristic (`ai.js`) on constrained hardware. It is released as open scientific work for researchers with access to greater computational resources.
+
+A closed loop runs on Google Colab (free tier, T4 GPU). A local language model proposes modifications to `ai.js`; a Node.js evaluator measures win rate across 200 games; the harness commits, evaluates, and keeps or reverts each change without human intervention. All progress is persisted to Google Drive via a git bundle, surviving session expiry.
+
+The system implements two complementary loops. Loop 1 runs autonomously and is suited to parameter tuning and simple heuristic additions. Loop 2 is human-guided and addresses targeted algorithmic changes — for example, correcting ranged unit positioning — that win rate alone cannot diagnose. A Loop 2 change is injected into `ai.js` manually, then Loop 1 resumes and fine-tunes within the expanded capability.
+
+```mermaid
+flowchart TD
+    subgraph L1["Loop 1 — Autoresearch (continuous)"]
+        A([Start / Resume]) --> B[Read ai.js<br/>+ build prompt]
+        B --> C["Local inference<br/>Qwen2.5-3B · ~12 min"]
+        C --> D{Parse<br/>response}
+        D -- "no JS found" --> B
+        D -- "JS extracted" --> E{Sanity<br/>check}
+        E -- fail --> B
+        E -- pass --> F[git commit ai.js]
+        F --> G["Evaluate<br/>200 games · Node.js"]
+        G --> H{win_rate<br/>returned?}
+        H -- crash --> I["Revert<br/>git reset --hard<br/>store error tail"]
+        I --> B
+        H -- yes --> J{win_rate<br/>> best?}
+        J -- no --> K["Discard<br/>git reset --hard"]
+        K --> B
+        J -- yes --> L["Keep<br/>update best<br/>save bundle to Drive"]
+        L --> B
+    end
+
+    subgraph L2["Loop 2 — Directed Research (human-guided)"]
+        M["Observe gameplay<br/>identify failure mode"]
+        M --> N["Reason with game constants<br/>damage tables · code structure"]
+        N --> O["Write targeted change<br/>to ai.js"]
+        O --> P[git commit<br/>git bundle save]
+    end
+
+    P -- "inject & resume" --> A
+```
+
+#### Empirical Results
+
+| Metric | Value |
+| :--- | :--- |
+| Baseline win rate | 50.0% |
+| Best achieved | 61.75% (Experiment #1) |
+| Gain | +11.75 points |
+| Evaluator | 200 games · 4 scenarios · noise ≈ 1.5 pts |
+| Model | Qwen2.5-3B-Instruct · 4-bit NF4 |
+| Hardware | Google Colab T4 · 16 GB VRAM |
+| Inference time | ~12 minutes per experiment |
+
+#### Findings
+
+**Established.** The harness is correct and produces real results. An 11.75-point gain in the first successful experiment confirms the pipeline generates genuine improvement.
+
+**Null hypothesis confirmed.** A 3B parameter model is insufficient for sustained autonomous code modification. Seven consecutive crashes at the same file location with identical proposals confirm the model fixates rather than explores under iterative agentic load. This is a capacity constraint, not a harness or prompt deficiency. It is a known boundary condition of small models in agentic use.
+
+**Open question.** Whether the win rate gain translates to harder human play is untested and is the sole criterion of practical success for this project.
+
+#### Future Direction
+
+A more capable small model (3B–4B) with stronger long-form code generation may resolve the fixation pattern without exceeding T4 constraints. The architecture requires no change — only a model ID update. The harness, evaluator, git strategy, and two-loop design are valid at any model size.
+
+#### Reproducing This System
+
+Requirements: Google Colab account with GPU runtime (T4 free tier is sufficient). The notebook `GridCombat_Autoresearch.ipynb` contains all cells, configuration, and documentation. Upload `ai.js`, `baseline_ai.js`, `game_core.js`, and `evaluate.js` to Colab, then run cells in order. On session restart, skip only Cell 5 (initial commit). The git bundle on Drive preserves all progress across sessions.
 ___
 ## Installation
 
@@ -233,4 +300,7 @@ The game logic for Grid Combat is contained in `grid-combat/game.js`. The follow
 
 ## Contributors
 
-The development of the software and code benefited significantly from discussions and iterative refinement with an AI language model, Gemini 2.5 Pro (Google). The author oversaw and reviewed the accuracy and robustness of all parts of its development.
+The development of the software and code benefited significantly from discussions and iterative refinement with AI language models. The author oversaw and reviewed the accuracy and robustness of all parts of its development.
+
+-   **Gemini 2.5 Pro** (Google) — primary development of the game collection and RL data retrieval interfaces.
+-   **Claude Sonnet** (Anthropic) — design and implementation of the Grid Combat Autoresearch system, including the two-loop architecture, experiment harness, evaluator, git persistence strategy, and formal documentation of findings.
