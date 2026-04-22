@@ -223,4 +223,4 @@ are finite. Time is irreplaceable.
 
 ## References
 
-- Karpathy, A. (2024). [autoresearch](https://github.com/karpathy/autoresearch). GitHub repository.
+- Karpathy, A. (2026) [AutoResearch](https://github.com/karpathy/autoresearch). GitHub repository.
