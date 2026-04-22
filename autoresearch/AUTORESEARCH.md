@@ -7,6 +7,8 @@ Built for Google Colab free tier (T4 GPU). Documented and released as open scien
 
 ## What This Is
 
+The architecture and procedure of this system are based on the [autoresearch](https://github.com/karpathy/autoresearch) project by Andrej Karpathy.
+
 This notebook implements a closed-loop system that autonomously proposes, evaluates, and
 commits modifications to a game AI heuristic (`ai.js`) for a turn-based strategy game.
 A local language model generates code changes; a Node.js evaluator measures win rate across
@@ -216,3 +218,9 @@ result would refute that prediction?*
 
 Unfocused continuation across many sessions produces noise rather than knowledge. Resources
 are finite. Time is irreplaceable.
+
+---
+
+## References
+
+- Karpathy, A. (2024). [autoresearch](https://github.com/karpathy/autoresearch). GitHub repository.

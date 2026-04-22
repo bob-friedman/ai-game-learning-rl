@@ -166,7 +166,7 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ### Autoresearch — Autonomous AI Improvement
 
-This section documents an autonomous research system developed for iterative improvement of the Grid Combat AI heuristic (`ai.js`) on constrained hardware. It is released as open scientific work for researchers with access to greater computational resources.
+This section documents an autonomous research system developed for iterative improvement of the Grid Combat AI heuristic (`ai.js`) on constrained hardware. The architecture and procedure are based on the [autoresearch](https://github.com/karpathy/autoresearch) project by Andrej Karpathy. It is released as open scientific work for researchers with access to greater computational resources.
 
 A closed loop runs on Google Colab (free tier, T4 GPU). A local language model proposes modifications to `ai.js`; a Node.js evaluator measures win rate across 200 games; the harness commits, evaluates, and keeps or reverts each change without human intervention. All progress is persisted to Google Drive via a git bundle, surviving session expiry.
 
@@ -183,10 +183,10 @@ flowchart TD
         E -- fail --> B
         E -- pass --> F[git commit ai.js]
         F --> G["Evaluate<br/>200 games · Node.js"]
-        G --> H{win_rate<br/>returned?}
+        G --> H{"win_rate<br/>returned?"}
         H -- crash --> I["Revert<br/>git reset --hard<br/>store error tail"]
         I --> B
-        H -- yes --> J{win_rate<br/>> best?}
+        H -- yes --> J{"win_rate<br/>> best?"}
         J -- no --> K["Discard<br/>git reset --hard"]
         K --> B
         J -- yes --> L["Keep<br/>update best<br/>save bundle to Drive"]
