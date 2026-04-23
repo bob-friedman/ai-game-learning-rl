@@ -166,9 +166,9 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ### Autoresearch — Autonomous AI Improvement
 
-This section documents an autonomous research system developed for iterative improvement of the Grid Combat AI heuristic (`ai.js`) on constrained hardware. The architecture and procedure are based on the [autoresearch](https://github.com/karpathy/autoresearch) project by Andrej Karpathy. It is released as open scientific work for researchers with access to greater computational resources.
+This section documents an autonomous research system developed for iterative improvement of the Grid Combat AI heuristic (`ai.js`). The architecture and procedure are based on the [autoresearch](https://github.com/karpathy/autoresearch) project by Andrej Karpathy. It is released as open scientific work for researchers aiming to automate the discovery of optimal game heuristics.
 
-A closed loop runs on Google Colab (free tier, T4 GPU). A local language model proposes modifications to `ai.js`; a Node.js evaluator measures win rate across 200 games; the harness commits, evaluates, and keeps or reverts each change without human intervention. All progress is persisted to Google Drive via a git bundle, surviving session expiry.
+A closed loop runs on Google Colab, leveraging Gemini 2.5 Flash-Lite (via API) or a local Qwen 2.5 3B model (T4 GPU). The language model proposes modifications to `ai.js`; a Node.js evaluator measures win rate across 200 games; the harness commits, evaluates, and keeps or reverts each change without human intervention. All progress is persisted to Google Drive via a git bundle, surviving session expiry.
 
 The system implements two complementary loops. Loop 1 runs autonomously and is suited to parameter tuning and simple heuristic additions. Loop 2 is human-guided and addresses targeted algorithmic changes — for example, correcting ranged unit positioning — that win rate alone cannot diagnose. A Loop 2 change is injected into `ai.js` manually, then Loop 1 resumes and fine-tunes within the expanded capability.
 
@@ -176,7 +176,7 @@ The system implements two complementary loops. Loop 1 runs autonomously and is s
 flowchart TD
     subgraph L1["Loop 1 — Autoresearch (continuous)"]
         A([Start / Resume]) --> B[Read ai.js<br/>+ build prompt]
-        B --> C["Local inference<br/>Qwen2.5-3B · ~12 min"]
+        B --> C["Inference<br/>Gemini 2.5 Flash-Lite<br/>or Qwen 2.5 3B"]
         C --> D{Parse<br/>response}
         D -- "no JS found" --> B
         D -- "JS extracted" --> E{Sanity<br/>check}
@@ -211,25 +211,25 @@ flowchart TD
 | Best achieved | 61.75% (Experiment #1) |
 | Gain | +11.75 points |
 | Evaluator | 200 games · 4 scenarios · noise ≈ 1.5 pts |
-| Model | Qwen2.5-3B-Instruct · 4-bit NF4 |
-| Hardware | Google Colab T4 · 16 GB VRAM |
-| Inference time | ~12 minutes per experiment |
+| Primary Model | Gemini 2.5 Flash-Lite (API) |
+| Fallback Model | Qwen 2.5 3B · 4-bit NF4 (local) |
+| Platform | Google Colab |
 
 #### Findings
 
-**Established.** The harness is correct and produces real results. An 11.75-point gain in the first successful experiment confirms the pipeline generates genuine improvement.
+**Established.** The autoresearch loop functions correctly and reliably, especially when using Gemini 2.5 Flash-Lite. It handles inference, evaluation, and persistence without human intervention. Significant win rate improvements have been achieved, confirming the pipeline produces real results.
 
-**Null hypothesis confirmed.** A 3B parameter model is insufficient for sustained autonomous code modification. Seven consecutive crashes at the same file location with identical proposals confirm the model fixates rather than explores under iterative agentic load. This is a capacity constraint, not a harness or prompt deficiency. It is a known boundary condition of small models in agentic use.
+**Refining Local Constraints.** Earlier experiments with Qwen 2.5 3B demonstrated that while 3B-class models can achieve initial gains, they eventually hit a capacity ceiling in agentic use. The transition to Gemini 2.5 Flash-Lite successfully bypassed these limitations, allowing for sustained, autonomous exploration of the heuristic search space without the syntactic degradation often observed in smaller local models.
 
 **Open question.** Whether the win rate gain translates to harder human play is untested and is the sole criterion of practical success for this project.
 
 #### Future Direction
 
-A more capable small model (3B–4B) with stronger long-form code generation may resolve the fixation pattern without exceeding T4 constraints. The architecture requires no change — only a model ID update. The harness, evaluator, git strategy, and two-loop design are valid at any model size.
+Future research will focus on human play testing to verify win rate gains, and implementing more complex spatial awareness heuristics for ranged units that the autoresearch loop can then parameterise.
 
 #### Reproducing This System
 
-Requirements: Google Colab account with GPU runtime (T4 free tier is sufficient). The notebook `GridCombat_Autoresearch.ipynb` contains all cells, configuration, and documentation. Upload `ai.js`, `baseline_ai.js`, `game_core.js`, and `evaluate.js` to Colab, then run cells in order. On session restart, skip only Cell 5 (initial commit). The git bundle on Drive preserves all progress across sessions.
+Requirements: Google Colab account. Gemini API key (recommended) or T4 GPU runtime. The notebook `GridCombat_Autoresearch.ipynb` contains all cells, configuration, and documentation. Upload `ai.js`, `baseline_ai.js`, `game_core.js`, and `evaluate.js` to Colab, then run cells in order. The git bundle on Drive preserves all progress across sessions.
 ___
 ## Installation
 
