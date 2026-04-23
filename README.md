@@ -303,4 +303,5 @@ The game logic for Grid Combat is contained in `grid-combat/game.js`. The follow
 The development of the software and code benefited significantly from discussions and iterative refinement with AI language models. The author oversaw and reviewed the accuracy and robustness of all parts of its development.
 
 -   **Gemini 2.5 Pro** (Google) — primary development of the game collection and RL data retrieval interfaces.
+-   **Gemini 3.1 Pro** (Google) — transition to Google Flash Lite in the Autoresearch workflow script and several bug fixes.
 -   **Claude Sonnet** (Anthropic) — design and implementation of the Grid Combat Autoresearch system, including the two-loop architecture, experiment harness, evaluator, git persistence strategy, and formal documentation of findings.
