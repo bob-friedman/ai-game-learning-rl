@@ -384,14 +384,20 @@ function runAITurn(state, team) {
                     if (UNITS[unit.type].capture) {
                         const stA = getStructureAt(state, a.x, a.y);
                         const stB = getStructureAt(state, b.x, b.y);
-                        if (stA && stA.team !== unit.team) sA += 200;
-                        if (stB && stB.team !== unit.team) sB += 200;
+                        if (stA && stA.team !== unit.team) sA += 60;
+                        if (stB && stB.team !== unit.team) sB += 60;
                     }
 
-                    // Defend: strongly prefer own HQ tile
+                    // Defend: strongly prefer own HQ tile or intercepting threats
                     if (defendMode && ownHQ) {
-                        if (a.x === ownHQ.x && a.y === ownHQ.y) sA += 2000;
-                        if (b.x === ownHQ.x && b.y === ownHQ.y) sB += 2000;
+                        const threatUnit = state.units.find(u => u.team === enemyTeam && UNITS[u.type].capture && Math.abs(u.x - ownHQ.x) + Math.abs(u.y - ownHQ.y) <= 6);
+                        if (threatUnit) {
+                            sA -= (Math.abs(a.x - threatUnit.x) + Math.abs(a.y - threatUnit.y)) * 100;
+                            sB -= (Math.abs(b.x - threatUnit.x) + Math.abs(b.y - threatUnit.y)) * 100;
+                        } else {
+                            if (a.x === ownHQ.x && a.y === ownHQ.y) sA += 2000;
+                            if (b.x === ownHQ.x && b.y === ownHQ.y) sB += 2000;
+                        }
                     }
 
                     // Deconflict with fellow units still to move
@@ -404,8 +410,8 @@ function runAITurn(state, team) {
                     if (onFellowPath(b.x, b.y)) sB -= 60;
 
                     // Deterministic dither (breaks ties without true randomness variance)
-                    sA += (((a.x * 7) + (a.y * 13) + (state.totalTurns * 3)) % 10) / 10 - 0.5;
-                    sB += (((b.x * 7) + (b.y * 13) + (state.totalTurns * 3)) % 10) / 10 - 0.5;
+                    sA += (((a.x * 11) + (a.y * 17) + (state.totalTurns * 5)) % 10) / 10 - 0.5;
+                    sB += (((b.x * 11) + (b.y * 17) + (state.totalTurns * 5)) % 10) / 10 - 0.5;
 
                     return sB - sA;
                 });

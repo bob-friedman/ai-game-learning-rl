@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <!--
-GRIDWARS - ENHANCED EDITION v1.3
-==================================
-UPDATES IN THIS VERSION:
-1. Advanced AI: Desperation curve, Conservation doctrine, Breach tactics.
-2. Analytics: Game history with turn snapshots and balance chart.
-3. Features: AI vs AI spectate mode, Fast Speed toggle, Save/Load game.
-4. UI: New responsive layout with floating menu and improved mobile support.
+GRIDWARS - ULTIMATE UNIFIED EDITION v1.5 (Final)
+=================================================
+FEATURES:
+1. Universal Compatibility: Works perfectly on Desktop, Tablet, and Mobile.
+2. Dynamic Scaling: Board calculates optimal cell size based on screen real estate.
+3. Touch & Mouse: Touch taps show unit info immediately, hover works for mouse.
+4. Expanded Desktop UI: Uses larger fonts and wider panels on large screens.
+5. Safety Measures: Dialogs prevent accidental game resets on mobile & desktop.
+6. Full History Engine: Retains detailed hindsight metrics & JSON exports from Desktop.
+7. No UI Jumping: UI panel uses fixed Flexbox heights so board never shifts on hover/log updates.
 -->
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Grid Combat - Enhanced Edition</title>
+<title>Grid Combat - Ultimate Unified Edition v1.5</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -40,6 +43,8 @@ UPDATES IN THIS VERSION:
         <div id="pending-capture-info" style="display:none; padding: 4px 8px; font-size: var(--font-small); color: #0f0; flex: 0 0 auto;"></div>
     </div>
 </div>
+
+<!-- Menu Panel -->
 <div id="menu-panel">
     <div id="menu-panel-header">
         <span>MENU</span>
@@ -86,6 +91,8 @@ UPDATES IN THIS VERSION:
         <button onclick="openHistoryModal()" id="history-btn">View Game History</button>
     </div>
 </div>
+
+<!-- Modals -->
 <div id="modal-overlay">
     <div id="modal">
         <h3 style="color:#ff6666; margin: 0 0 12px 0;">Reset Game?</h3>
@@ -94,6 +101,7 @@ UPDATES IN THIS VERSION:
         <button onclick="closeModal()" style="background:#363; padding: 8px 18px; margin: 5px;">Cancel</button>
     </div>
 </div>
+
 <div id="scenario-confirm-modal">
     <div id="scenario-confirm-box">
         <h3>Load New Scenario?</h3>
@@ -102,14 +110,16 @@ UPDATES IN THIS VERSION:
         <button onclick="cancelCommitScenario()" style="background:#363; padding: 8px 18px; margin: 8px;">Cancel</button>
     </div>
 </div>
+
 <div id="turn-confirm-modal">
     <div id="turn-confirm-box">
-        <h3 style="color:#fa0;">End Turn?</h3>
+        <h3>End Turn?</h3>
         <p id="turn-confirm-msg" style="font-size: var(--font-small); color: #bbb;">You have unmoved units.</p>
         <button onclick="executeEndTurn()" style="background: #a60; padding: 8px 18px; margin: 8px;">End Turn</button>
         <button onclick="closeTurnConfirm()" style="background: #363; padding: 8px 18px; margin: 8px;">Cancel</button>
     </div>
 </div>
+
 <div id="history-modal" onclick="if(event.target===this)closeHistoryModal()">
     <div id="history-box">
         <h3>Game History — <span id="history-title-scenario"></span></h3>
@@ -143,6 +153,8 @@ UPDATES IN THIS VERSION:
         </div>
     </div>
 </div>
+
+<!-- Generic confirm modal -->
 <div id="confirm-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center;">
     <div class="confirm-box">
         <h3 id="confirm-title" style="color:#f88;">Confirm</h3>
@@ -151,6 +163,7 @@ UPDATES IN THIS VERSION:
         <button id="confirm-no"  style="background:#363; padding: 8px 18px; margin: 0 6px;">No</button>
     </div>
 </div>
+
 <script src="game.js"></script>
 </body>
 </html>
