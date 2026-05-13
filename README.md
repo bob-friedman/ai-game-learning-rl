@@ -75,18 +75,18 @@ Boxes supports multiple control schemes to accommodate different platforms and p
 
 ![Boxes Screenshot](docs/images/screenshot_1_boxes.png)
 ___
-## Grid Combat (Enhanced Edition v1.3)
+## Grid Combat (Ultimate Unified Edition v1.5)
 
 ![Grid Combat Icon](docs/images/icon_gridcombat.png)
 
 This browser-based tactical strategy game pits two military factions—the Gold and Blue teams—against each other on grid-based battlefields filled with diverse terrain. Players command a variety of units including infantry, tanks, mechanized walkers, heavy armor, artillery, and rocket launchers, each possessing unique movement ranges, vision capabilities, and combat statistics that interact dynamically with environmental factors like woods, mountains, roads, and water obstacles. The gameplay emphasizes positional strategy and resource management, with units unable to move through certain terrain and defensive bonuses varying by location, while specialized infantry units serve as the only forces capable of capturing enemy headquarters to achieve victory.
 
-### Recent Updates (v1.3)
+### Recent Updates (v1.5)
 
--   **Advanced Strategic AI**: Implementation of a dynamic AI system featuring a desperation curve (increasing aggression when losing), conservation doctrine (preserving units during parity), and breach tactics (aggressive breakthroughs during advantage).
+-   **Advanced Strategic AI**: Implementation of a dynamic AI system featuring a desperation curve (increasing aggression when losing), conservation doctrine (preserving units during parity), and breach tactics (aggressive breakthroughs during advantage). Version 1.5 adds proactive interception logic to the AI's defensive doctrine, enabling it to actively intercept enemy capturers approaching the HQ.
 -   **Game Analytics & History**: A comprehensive history system that records turn-by-turn snapshots, calculates strategic balance, and generates a visual performance chart. Data can be exported as JSON for further analysis.
 -   **AI vs AI Spectate Mode**: New game modes allow for automated matches between AI opponents, with adjustable speeds and pause functionality.
--   **Enhanced UI & Responsiveness**: A completely redesigned, mobile-friendly interface featuring a sliding menu system, better scaling for different screen sizes, and improved touch controls.
+-   **Enhanced UI & Responsiveness**: A completely redesigned, mobile-friendly interface featuring a sliding menu system, better scaling for different screen sizes, and improved touch controls. UI panel uses fixed Flexbox heights to prevent board shifting during updates.
 -   **Save/Load Functionality**: Support for saving game progress to local storage and resuming at a later time.
 -   **Visual Enhancements**: Added floating combat text for damage and capture points, HP indicators (dots), and a home territory defense gradient.
 
