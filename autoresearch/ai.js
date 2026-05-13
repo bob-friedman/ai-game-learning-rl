@@ -1,24 +1,12 @@
 'use strict';
-// ============================================================
-// ai.js  —  EXPERIMENTAL: this is the only file you edit.
-// Contains the full AI decision logic for one side.
-// The evaluator pits this AI against baseline_ai.js.
-// Goal: highest win_rate (0–100). Baseline ≈ 50.
-// ============================================================
-
 const {
     UNITS, TERRAIN, UNIT_VALUE,
     getUnitAt, getStructureAt, getHomeTerritoryBonus,
     getMovableTiles, getDistToHQ, getAttackTargets,
     resolveCombat, queueCapture, evaluatePosition
 } = require('./game_core');
-
-// ---------- Tuneable constants ------------------------------------
-// These are the primary knobs. Try changing them first.
 const UNIT_THREAT_WEIGHT = { infantry:1, mech:2, tank:4, heavy:6, artillery:0, rocket:0 };
 const UNIT_CAUTION       = { infantry:5, mech:4, tank:2, heavy:1, artillery:3, rocket:3 };
-
-// ---------- Threat / terrain helpers ------------------------------
 function calculateHQVisionRadius(state) {
     const g = state.structures.find(s => s.type === 'hq' && s.team === 0);
     const b = state.structures.find(s => s.type === 'hq' && s.team === 1);
@@ -26,7 +14,6 @@ function calculateHQVisionRadius(state) {
     const hqDist = Math.abs(g.x - b.x) + Math.abs(g.y - b.y);
     return Math.max(4, Math.min(10, Math.floor(hqDist * 0.35)));
 }
-
 function detectHQThreats(state, hq, enemyTeam) {
     const radius = calculateHQVisionRadius(state);
     const threats = [];
@@ -38,41 +25,32 @@ function detectHQThreats(state, hq, enemyTeam) {
     });
     return threats;
 }
-
 function calculateTimeToReach(state, fromX, fromY, toX, toY, moveSpeed) {
     const distMap = getDistToHQ(state, toX, toY);
     const pathDist = distMap[fromY][fromX];
     return pathDist === 999 ? 999 : Math.ceil(pathDist / moveSpeed);
 }
-
 function shouldDefend(state, aiTeam) {
     const enemy = 1 - aiTeam;
     const aiHQ  = state.structures.find(s => s.type === 'hq' && s.team === aiTeam);
     const enHQ  = state.structures.find(s => s.type === 'hq' && s.team === enemy);
     if (!aiHQ || !enHQ) { state.aiDefendLatch[aiTeam] = false; return false; }
-
     const threats = detectHQThreats(state, aiHQ, enemy).filter(t => t.canCapture);
     if (threats.length === 0) { state.aiDefendLatch[aiTeam] = false; return false; }
     if (state.aiDefendLatch[aiTeam]) return true;
-
     const closest = threats.reduce((m, t) => t.distance < m.distance ? t : m);
     const turnsToMyHQ = calculateTimeToReach(
         state, closest.unit.x, closest.unit.y, aiHQ.x, aiHQ.y, UNITS[closest.unit.type].move);
-
     const myCaps = state.units.filter(u => u.team === aiTeam && UNITS[u.type].capture);
     if (myCaps.length === 0) { state.aiDefendLatch[aiTeam] = true; return true; }
-
     let minTurnsToEnemyHQ = 999;
     myCaps.forEach(u => {
         const t = calculateTimeToReach(state, u.x, u.y, enHQ.x, enHQ.y, UNITS[u.type].move);
         if (t < minTurnsToEnemyHQ) minTurnsToEnemyHQ = t;
     });
-
     if (turnsToMyHQ < minTurnsToEnemyHQ) { state.aiDefendLatch[aiTeam] = true; return true; }
     return false;
 }
-
-// ---------- Map analysis ------------------------------------------
 function buildDangerMap(state, enemyTeam) {
     const H = state.map.length, W = state.map[0].length;
     const danger = Array.from({ length: H }, () => new Float32Array(W));
@@ -100,7 +78,6 @@ function buildDangerMap(state, enemyTeam) {
     });
     return danger;
 }
-
 function buildSafetyMap(state, enemyTeam) {
     const H = state.map.length, W = state.map[0].length;
     const covered = Array.from({ length: H }, () => new Uint8Array(W));
@@ -129,7 +106,6 @@ function buildSafetyMap(state, enemyTeam) {
             if (!covered[y][x]) safety[y][x] = 10 + TERRAIN[state.map[y][x].type].def * 10;
     return safety;
 }
-
 function countAdjacentTeamUnits(state, x, y, team) {
     let count = 0;
     for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
@@ -138,24 +114,16 @@ function countAdjacentTeamUnits(state, x, y, team) {
     }
     return count;
 }
-
-// ---------- Attack scoring ----------------------------------------
 function calculateAttackValue(state, attacker, target, breachMultiplier = 1.0) {
     const atkData = UNITS[attacker.type], defData = UNITS[target.type];
-
-    // Absolute priority: defending own HQ
     const struct = getStructureAt(state, target.x, target.y);
     if (struct && struct.type === 'hq' && struct.team === attacker.team) return 5000;
-
     const baseDamage = atkData.damage[target.type] || 0;
     const hpRatio    = attacker.hp / attacker.maxHp;
     const defMod     = TERRAIN[state.map[target.y][target.x].type].def;
     const damage     = Math.ceil(baseDamage * hpRatio * defMod);
     const targetVal  = UNIT_VALUE[target.type] || 20;
-
     let score = (damage / target.maxHp) * targetVal;
-
-    // Bonus for targeting capturer near our HQ
     if (defData.capture) {
         const ownHQ = state.structures.find(s => s.type === 'hq' && s.team === attacker.team);
         if (ownHQ) {
@@ -163,15 +131,11 @@ function calculateAttackValue(state, attacker, target, breachMultiplier = 1.0) {
             if (d <= 4) score += (5 - d) * 100;
         }
     }
-
-    // Kill bonus
     if (damage >= target.hp) {
         score += targetVal * 0.5;
         if (defData.capture) score += 50;
         if (defData.ranged)  score += 40;
     }
-
-    // Counter-attack cost (melee only)
     if (!atkData.ranged) {
         const remainHP = Math.max(0, target.hp - damage);
         let counterDmg = 0;
@@ -186,18 +150,12 @@ function calculateAttackValue(state, attacker, target, breachMultiplier = 1.0) {
         const adjThreats = countAdjacentTeamUnits(state, attacker.x, attacker.y, target.team);
         if (adjThreats > 1) score -= (adjThreats - 1) * 20 * (UNIT_CAUTION[attacker.type] ?? 3) * selfMod;
     }
-
-    // Flanking allies bonus
     const alliesNear = countAdjacentTeamUnits(state, target.x, target.y, attacker.team) - 1;
     if (alliesNear > 0) score += alliesNear * 15;
-
-    // Stalemate-breaker
     if (state.turnsSinceLastCombat > 4) score += state.turnsSinceLastCombat * 10;
-
-    score += Math.random() * 5; // tiebreak dither
+    score += Math.random() * 5;
     return score;
 }
-
 function selectOptimalTarget(state, attacker, targets, breachMultiplier = 1.0) {
     let best = null, bestVal = -Infinity;
     for (const pos of targets) {
@@ -208,8 +166,6 @@ function selectOptimalTarget(state, attacker, targets, breachMultiplier = 1.0) {
     }
     return best;
 }
-
-// ---------- Attack attempt ----------------------------------------
 function tryAiAttack(state, unit, conserveDepth = 0, breachMultiplier = 1.0) {
     const targets = getAttackTargets(state, unit);
     if (targets.length === 0) return false;
@@ -217,8 +173,6 @@ function tryAiAttack(state, unit, conserveDepth = 0, breachMultiplier = 1.0) {
     if (!pos) return false;
     const tgt = getUnitAt(state, pos.x, pos.y);
     if (!tgt) return false;
-
-    // Conserve-mode caution: skip bad trades
     if (conserveDepth > 0.3 && !UNITS[unit.type].ranged) {
         const isRangedTgt = UNITS[tgt.type].ranged;
         const ctrDmg = isRangedTgt ? 0 : Math.floor(
@@ -233,26 +187,19 @@ function tryAiAttack(state, unit, conserveDepth = 0, breachMultiplier = 1.0) {
             return false;
         }
     }
-
     resolveCombat(state, unit, tgt);
     unit.hasAttacked = true;
     if (UNITS[unit.type].ranged) unit.moved = true;
     unit.hasMovedThisTurn = true;
     return true;
 }
-
-// ---------- Main AI turn (synchronous) ----------------------------
 function runAITurn(state, team) {
     if (state.gameOver || state.turn !== team) return;
-
-    // Sort units: ranged → capturers → others
     const unmoved = state.units.filter(u => u.team === team && !u.moved);
     const ranged   = unmoved.filter(u =>  UNITS[u.type].ranged);
     const capturers= unmoved.filter(u => !UNITS[u.type].ranged && UNITS[u.type].capture);
     const others   = unmoved.filter(u => !UNITS[u.type].ranged && !UNITS[u.type].capture);
     const aiUnits  = [...ranged, ...capturers, ...others];
-
-    // Doctrine
     const defendMode = shouldDefend(state, team);
     const ev = evaluatePosition(state);
     const ownMat   = team === 0 ? ev.goldMaterial : ev.blueMaterial;
@@ -266,16 +213,12 @@ function runAITurn(state, team) {
     }
     let breachMultiplier = 1.0;
     if (materialRatio > 1.3 && !defendMode) breachMultiplier = Math.max(0.2, 1.8 - materialRatio);
-
     const dangerMap = buildDangerMap(state, 1 - team);
     const safetyMap = buildSafetyMap(state, 1 - team);
     const enemyTeam = 1 - team;
-
     for (const unit of aiUnits) {
         if (state.gameOver) break;
         if (!state.units.includes(unit)) continue;
-
-        // Standing on enemy HQ → begin/continue capture
         const standingStruct = getStructureAt(state, unit.x, unit.y);
         if (standingStruct && standingStruct.type === 'hq' &&
             standingStruct.team !== unit.team && UNITS[unit.type].capture) {
@@ -283,16 +226,10 @@ function runAITurn(state, team) {
             unit.moved = true; unit.hasMovedThisTurn = true;
             continue;
         }
-
-        // Try to attack before moving
         let attacked = tryAiAttack(state, unit, conserveDepth, breachMultiplier);
-
-        // Move phase
         if (!attacked && !unit.moved) {
             const movable = getMovableTiles(state, unit, true);
             movable.push({ x: unit.x, y: unit.y, cost: 0 });
-
-            // Find strategic target
             let targetX, targetY, ownHQ;
             ownHQ = state.structures.find(s => s.type === 'hq' && s.team === team);
             if (defendMode && ownHQ) {
@@ -301,14 +238,11 @@ function runAITurn(state, team) {
                 const enemyHQ = state.structures.find(s => s.type === 'hq' && s.team === enemyTeam);
                 if (enemyHQ) { targetX = enemyHQ.x; targetY = enemyHQ.y; }
             }
-
             if (targetX !== undefined) {
                 const distMap     = getDistToHQ(state, targetX, targetY);
                 const ownDistMap  = ownHQ ? getDistToHQ(state, ownHQ.x, ownHQ.y) : null;
-
                 movable.sort((a, b) => {
                     let sA = 0, sB = 0;
-
                     const nearestEnemyDist = (tx, ty) => {
                         let min = 99;
                         state.units.forEach(u => {
@@ -321,10 +255,7 @@ function runAITurn(state, team) {
                     };
                     const dA = nearestEnemyDist(a.x, a.y);
                     const dB = nearestEnemyDist(b.x, b.y);
-
                     const terrainDef = (x, y) => TERRAIN[state.map[y][x].type].def;
-
-                    // Terrain score: prefer cover
                     const terrainScore = (x, y) => {
                         const def = terrainDef(x, y);
                         let pts = (1.0 - def) * 100;
@@ -336,14 +267,10 @@ function runAITurn(state, team) {
                     };
                     sA += terrainScore(a.x, a.y);
                     sB += terrainScore(b.x, b.y);
-
-                    // Danger penalty
                     const caution = (UNIT_CAUTION[unit.type] || 3) *
                         (1 + conserveDepth * 1.5) * breachMultiplier * (1 - desperation);
                     const rdA = dangerMap[a.y][a.x] * terrainDef(a.x, a.y) * caution;
                     const rdB = dangerMap[b.y][b.x] * terrainDef(b.x, b.y) * caution;
-
-                    // Cohesion bonus
                     const cohesion = (tx, ty) => {
                         let c = 0;
                         state.units.forEach(u => {
@@ -358,7 +285,6 @@ function runAITurn(state, team) {
                     sA -= Math.max(0, rdA - cohA * 1.5); sB -= Math.max(0, rdB - cohB * 1.5);
                     sA += cohA; sB += cohB;
                     sA += safetyMap[a.y][a.x]; sB += safetyMap[b.y][b.x];
-
                     if (UNITS[unit.type].ranged) {
                         const maxR = UNITS[unit.type].maxRange;
                         if (dA > maxR + 2 && dB > maxR + 2) {
@@ -379,16 +305,12 @@ function runAITurn(state, team) {
                             sA -= dA * apW; sB -= dB * apW;
                         }
                     }
-
-                    // Structure capture bonus
                     if (UNITS[unit.type].capture) {
                         const stA = getStructureAt(state, a.x, a.y);
                         const stB = getStructureAt(state, b.x, b.y);
-                        if (stA && stA.team !== unit.team) sA += 60;
-                        if (stB && stB.team !== unit.team) sB += 60;
+                        if (stA && stA.team !== unit.team) sA += 200;
+                        if (stB && stB.team !== unit.team) sB += 200;
                     }
-
-                    // Defend: strongly prefer own HQ tile or intercepting threats
                     if (defendMode && ownHQ) {
                         const threatUnit = state.units.find(u => u.team === enemyTeam && UNITS[u.type].capture && Math.abs(u.x - ownHQ.x) + Math.abs(u.y - ownHQ.y) <= 6);
                         if (threatUnit) {
@@ -399,8 +321,6 @@ function runAITurn(state, team) {
                             if (b.x === ownHQ.x && b.y === ownHQ.y) sB += 2000;
                         }
                     }
-
-                    // Deconflict with fellow units still to move
                     const fellows = aiUnits.filter(u2 => u2 !== unit && !u2.moved && state.units.includes(u2));
                     const onFellowPath = (tx, ty) => fellows.some(u2 => {
                         return Math.abs(u2.x - tx) + Math.abs(u2.y - ty) <= UNITS[u2.type].move &&
@@ -408,15 +328,11 @@ function runAITurn(state, team) {
                     });
                     if (onFellowPath(a.x, a.y)) sA -= 60;
                     if (onFellowPath(b.x, b.y)) sB -= 60;
-
-                    // Deterministic dither (breaks ties without true randomness variance)
                     sA += (((a.x * 11) + (a.y * 17) + (state.totalTurns * 5)) % 10) / 10 - 0.5;
                     sB += (((b.x * 11) + (b.y * 17) + (state.totalTurns * 5)) % 10) / 10 - 0.5;
-
                     return sB - sA;
                 });
             }
-
             const move = movable[0];
             if (move) {
                 unit.x = move.x; unit.y = move.y;
@@ -427,12 +343,9 @@ function runAITurn(state, team) {
                 }
             }
         }
-
-        // Try to attack after moving (melee units only)
         if (!attacked && !UNITS[unit.type].ranged && !unit.hasAttacked) {
             tryAiAttack(state, unit, conserveDepth, breachMultiplier);
         }
     }
 }
-
 module.exports = { runAITurn };
