@@ -83,7 +83,7 @@ This browser-based tactical strategy game pits two military factions—the Gold 
 
 ### Recent Updates (v1.5)
 
--   **Advanced Strategic AI**: Implementation of a dynamic AI system featuring a desperation curve (increasing aggression when losing), conservation doctrine (preserving units during parity), and breach tactics (aggressive breakthroughs during advantage). Version 1.5 adds proactive interception logic to the AI's defensive doctrine, enabling it to actively intercept enemy capturers approaching the HQ.
+-   **Advanced Strategic AI**: Implementation of a dynamic AI system featuring a desperation curve (increasing aggression when losing), conservation doctrine (preserving units during parity), and breach tactics (aggressive breakthroughs during advantage). Version 1.5 adds proactive interception logic to the AI's defensive doctrine, enabling it to actively intercept enemy capturers approaching the HQ. A specialized **HQ-Rush Doctrine** is activated if the opponent loses all their capturing units, forcing a decisive offensive to secure victory.
 -   **Game Analytics & History**: A comprehensive history system that records turn-by-turn snapshots, calculates strategic balance, and generates a visual performance chart. Data can be exported as JSON for further analysis.
 -   **AI vs AI Spectate Mode**: New game modes allow for automated matches between AI opponents, with adjustable speeds and pause functionality.
 -   **Enhanced UI & Responsiveness**: A completely redesigned, mobile-friendly interface featuring a sliding menu system, better scaling for different screen sizes, and improved touch controls. UI panel uses fixed Flexbox heights to prevent board shifting during updates.
