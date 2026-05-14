@@ -349,6 +349,12 @@ async function runAITurn(team = 1) {
     });
     const aiUnits = [...rangedUnits, ...capturerUnits, ...otherUnits];
 
+    // DOCTRINE: If AI has capturers and enemy has none, force HQ-rush doctrine
+    const enemyTeamForDoctrine = 1 - team;
+    const enemyHasCapturers = units.some(u => u.team === enemyTeamForDoctrine && UNITS[u.type].capture);
+    const doctrineActive = capturerUnits.length > 0 && !enemyHasCapturers;
+    if (doctrineActive) log(`${TEAMS[team]} AI: HQ-Rush Doctrine active!`);
+
     const defendMode = shouldDefend(team);
     if (defendMode) { log(`${TEAMS[team]} AI: Defensive positioning!`); await aiSleep(800); }
 
@@ -434,6 +440,22 @@ async function runAITurn(team = 1) {
                 }
 
                 if (targetX !== undefined && targetY !== undefined) {
+                    // DOCTRINE: non-capturer units redirect to highest-threat enemy targeting the capturer
+                    if (doctrineActive && !UNITS[unit.type].capture) {
+                        const myCapturers = units.filter(u => u.team === team && UNITS[u.type].capture);
+                        if (myCapturers.length > 0) {
+                            const enemyUnits = units.filter(u => u.team === enemyTeam);
+                            const bestThreat = enemyUnits.reduce((best, enemy) => {
+                                const nearestCapturer = myCapturers.reduce((n, c) => (Math.abs(enemy.x - c.x) + Math.abs(enemy.y - c.y)) < (Math.abs(enemy.x - n.x) + Math.abs(enemy.y - n.y)) ? c : n);
+                                const minDist = Math.abs(enemy.x - nearestCapturer.x) + Math.abs(enemy.y - nearestCapturer.y);
+                                const dmg = UNITS[enemy.type].damage[nearestCapturer.type] || 0;
+                                const rangedBonus = UNITS[enemy.type].ranged ? 2.5 : 1.0;
+                                const score = (dmg * (enemy.hp / (enemy.maxHp || UNITS[enemy.type].hp)) * rangedBonus) / (minDist + 1);
+                                return (!best || score > best.score) ? { unit: enemy, score } : best;
+                            }, null);
+                            if (bestThreat) { targetX = bestThreat.unit.x; targetY = bestThreat.unit.y; }
+                        }
+                    }
                     const distMap = getDistToHQ(targetX, targetY);
                     const ownHQ = structures.find(s => s.type === 'hq' && s.team === team);
                     const ownDistMap = ownHQ ? getDistToHQ(ownHQ.x, ownHQ.y) : null;
@@ -497,6 +519,8 @@ async function runAITurn(team = 1) {
                             let hqPullWeight = defendMode ? 20 : 4 + conserveDepth * 10;
                             if (breachMultiplier < 1.0) hqPullWeight += 15;
 							hqPullWeight += desperation * 50; // Pull toward the HQ when losing
+                            if (doctrineActive && UNITS[unit.type].capture) hqPullWeight = 999; // Doctrine: force capturer to enemy HQ
+                            if (doctrineActive && !UNITS[unit.type].capture) hqPullWeight = 50; // Doctrine: reliably direct combat units to threat
                             scoreA -= distMap[a.y][a.x] * hqPullWeight; scoreB -= distMap[b.y][b.x] * hqPullWeight;
                             if (!defendMode) {
                                 const approachWeight = 3 * (1 - conserveDepth * 0.8);
@@ -532,8 +556,8 @@ async function runAITurn(team = 1) {
                             if (isOnFellowPath(a.x, a.y)) scoreA -= 60; if (isOnFellowPath(b.x, b.y)) scoreB -= 60;
                         }
 
-                        const ditherA = (((a.x * 7) + (a.y * 13) + (turn * 3)) % 10) / 10 - 0.5;
-                        const ditherB = (((b.x * 7) + (b.y * 13) + (turn * 3)) % 10) / 10 - 0.5;
+                        const ditherA = (((a.x * 11) + (a.y * 17) + (turn * 5)) % 10) / 10 - 0.5;
+                        const ditherB = (((b.x * 11) + (b.y * 17) + (turn * 5)) % 10) / 10 - 0.5;
                         scoreA += ditherA; scoreB += ditherB;
 
                         return scoreB - scoreA;
@@ -579,8 +603,11 @@ async function tryAiAttack(unit, conserveDepth = 0, breachMultiplier = 1.0, mySe
         if (targetPos) {
             const targetUnit = getUnitAt(targetPos.x, targetPos.y);
             if (targetUnit) {
-                // Veto for bad trades when conserving
-                if (conserveDepth > 0.3 && !UNITS[unit.type].ranged) {
+                // Veto for bad trades when conserving — bypassed under doctrine for non-capturer units only
+                const doctrineVeto = !UNITS[unit.type].capture &&
+                                     units.some(u => u.team === unit.team && UNITS[u.type].capture) &&
+                                     !units.some(u => u.team === (1 - unit.team) && UNITS[u.type].capture);
+                if (conserveDepth > 0.3 && !UNITS[unit.type].ranged && !doctrineVeto) {
                     const isRangedTarget = UNITS[targetUnit.type].ranged;
                     const counterDmg = isRangedTarget ? 0 : Math.floor((UNITS[targetUnit.type]?.damage?.[unit.type] || 0) * (targetUnit.hp / targetUnit.maxHp) * (TERRAIN[map[unit.y][unit.x].type]?.def || 0.85));
                     const wouldDie = counterDmg >= unit.hp;
@@ -708,6 +735,22 @@ function calculateAttackValue(attacker, target, targetPos, breachMultiplier = 1.
     if (alliesAroundTarget > 0) score += (alliesAroundTarget * 15);
 
     if (turnsSinceLastCombat > 4) score += (turnsSinceLastCombat * 10);
+
+    // Doctrine: bonus for attacking the unit that most threatens AI capturers
+    const attackerTeam = attacker.team;
+    const doctrineActiveHere = !UNITS[attacker.type].capture &&
+                                units.some(u => u.team === attackerTeam && UNITS[u.type].capture) &&
+                                !units.some(u => u.team === (1 - attackerTeam) && UNITS[u.type].capture);
+    if (doctrineActiveHere) {
+        const myCapturers = units.filter(u => u.team === attackerTeam && UNITS[u.type].capture);
+        const nearestCapturer = myCapturers.reduce((n, c) =>
+            (Math.abs(target.x - c.x) + Math.abs(target.y - c.y)) < (Math.abs(target.x - n.x) + Math.abs(target.y - n.y)) ? c : n);
+        const distToCapturer = Math.abs(target.x - nearestCapturer.x) + Math.abs(target.y - nearestCapturer.y);
+        const rangedBonus = defData.ranged ? 2.5 : 1.0;
+        const threatScore = (defData.damage[nearestCapturer.type] || 0) * (target.hp / target.maxHp) * rangedBonus / (distToCapturer + 1);
+        score += threatScore * 50;
+    }
+
     score += Math.random() * 5;
 
     return score;

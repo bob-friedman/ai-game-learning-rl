@@ -194,8 +194,8 @@ const SPATIAL_SUPPORT_WEIGHT = 0;   // Loop 1 tuning target — increase to acti
 ```python
 DOMAIN_CONSTANTS_SUMMARY = """
 Unit stats: infantry(hp:10,move:3,capture:true), mech(hp:12,move:2,capture:true),
-tank(hp:10,move:2), heavy(hp:14,move:1), artillery(hp:8,move:2,range:3-4),
-rocket(hp:10,move:2,range:3-5). Ranged units cannot counter-attack.
+tank(hp:10,move:2), heavy(hp:16,move:2), artillery(hp:8,move:2,range:3-4),
+rocket(hp:7,move:2,range:3-5). Ranged units cannot counter-attack.
 
 Combat: finalDamage = floor(baseDamage * (attacker.hp/maxHp) * terrainDef * (1-homeBonus))
 
