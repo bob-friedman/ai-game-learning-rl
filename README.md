@@ -89,6 +89,7 @@ This browser-based tactical strategy game pits two military factions—the Gold 
 -   **Enhanced UI & Responsiveness**: A completely redesigned, mobile-friendly interface featuring a sliding menu system, better scaling for different screen sizes, and improved touch controls. UI panel uses fixed Flexbox heights to prevent board shifting during updates.
 -   **Save/Load Functionality**: Support for saving game progress to local storage and resuming at a later time.
 -   **Visual Enhancements**: Added floating combat text for damage and capture points, HP indicators (dots), and a home territory defense gradient.
+-   **Autonomous AI Research**: An automated pipeline for heuristic optimization has been developed for Grid Combat. See the [Autoresearch](#autoresearch--autonomous-ai-improvement) section below for details and findings.
 
 The turn-based combat system features direct engagements where attackers exchange fire with defenders unless utilizing ranged artillery that can strike from a distance without retaliation. An AI opponent automatically maneuvers the enemy forces during their turn, seeking optimal paths toward capture points and engaging vulnerable targets. The game includes scenarios that present unique tactical puzzles, alongside partly randomized skirmish modes that create maps with natural chokepoints and strategic crossings. Visual feedback features color-coded team indicators, terrain characters, and highlighted movement ranges, while an information panel displays statistics about unit health, terrain defense modifiers, and capture progress.
 
@@ -164,27 +165,6 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
 
-___
-## Othello
-
-![Othello Icon](docs/images/icon_othello.png)
-
-Othello is a classic strategy board game played on an 8x8 grid. The game challenges players to outmaneuver their opponent by capturing their pieces and occupying the majority of the board. It features a sleek interface with both local multiplayer and AI-driven single-player modes.
-
-### Gameplay
-
-The objective of Othello is to have the majority of your colored disks on the board at the end of the game. A move is made by placing a disk of your color on the board in a position that "out-flanks" one or more of the opponent's disks. These out-flanked disks are then flipped to your color. The game ends when neither player can make a move, usually when the board is full.
-
-Key features include:
-- **Game Modes**: Support for both Player vs Player and Player vs AI matches.
-- **AI Difficulty**: Choose between Easy (random), Medium (greedy), and Hard (minimax) AI opponents to suit your skill level.
-- **Accessible Controls**: Mobile-friendly interface with an optional cursor-based navigation system for precise play on touch devices.
-- **Review Mode**: After a game concludes, players can review the final board state before starting a new match.
-
-### Screenshot
-
-![Othello Screenshot](docs/images/screenshot_1_othello.png)
-
 ### Autoresearch — Autonomous AI Improvement
 
 This section documents an autonomous research system developed for iterative improvement of the Grid Combat AI heuristic (`ai.js`). The architecture and procedure are based on the [autoresearch](https://github.com/karpathy/autoresearch) project by Andrej Karpathy. It is released as open scientific work for researchers aiming to automate the discovery of optimal game heuristics.
@@ -251,6 +231,27 @@ Future research will focus on human play testing to verify win rate gains, and i
 #### Reproducing This System
 
 Requirements: Google Colab account. Gemini API key (recommended) or T4 GPU runtime. The notebook `GridCombat_Autoresearch.ipynb` contains all cells, configuration, and documentation. Upload `ai.js`, `baseline_ai.js`, `game_core.js`, and `evaluate.js` to Colab, then run cells in order. The git bundle on Drive preserves all progress across sessions.
+
+___
+## Othello
+
+![Othello Icon](docs/images/icon_othello.png)
+
+Othello is a classic strategy board game played on an 8x8 grid. The game challenges players to outmaneuver their opponent by capturing their pieces and occupying the majority of the board. It features a sleek interface with both local multiplayer and AI-driven single-player modes.
+
+### Gameplay
+
+The objective of Othello is to have the majority of your colored disks on the board at the end of the game. A move is made by placing a disk of your color on the board in a position that "out-flanks" one or more of the opponent's disks. These out-flanked disks are then flipped to your color. The game ends when neither player can make a move, usually when the board is full.
+
+Key features include:
+- **Game Modes**: Support for both Player vs Player and Player vs AI matches.
+- **AI Difficulty**: Choose between Easy (random), Medium (greedy), and Hard (minimax) AI opponents to suit your skill level.
+- **Accessible Controls**: Mobile-friendly interface with an optional cursor-based navigation system for precise play on touch devices.
+- **Review Mode**: After a game concludes, players can review the final board state before starting a new match.
+
+### Screenshot
+
+![Othello Screenshot](docs/images/screenshot_1_othello.png)
 ___
 ## Installation
 
