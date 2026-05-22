@@ -1,105 +1,179 @@
+:root {
+  --bg-color:          #121212;
+  --board-bg-color:    #1e1e1e;
+  --border-color:      #444444;
+  --text-color:        #e0e0e0;
+  --font-family:       Arial, sans-serif;
+  --wall-color:        #333333;
+  --player-color:      #4fc3f7;
+  --box-color:         #ffb74d;
+  --goal-color:        #7cb342;
+  --box-on-goal-color: #388e3c;
+  --tile-size:         30px;
+}
 body {
-  font-family: Arial, sans-serif;
+  font-family: var(--font-family);
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 87vh;
+  min-height: 100vh;
+  height: 100vh;
   margin: 0;
-  background-color: #3d3d3d;
+  overflow-y: auto;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
-
 #game-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  width: 100%;
-  max-width: 900px;
-  padding: 12px;
+  padding: 16px;
   box-sizing: border-box;
-  max-height: 87vh; 
+  background-color: var(--board-bg-color);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
-
 #topbar {
   display: flex;
   justify-content: center;
   gap: 12px;
   width: 100%;
-  color: #f4f4f4;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
-
-#levelSelect{
-   max-width: 150px;
-   overflow: hidden;
-   text-overflow: ellipsis;
-}
-
 .controls-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-
-#canvas-wrapper {
-  position: relative;
+#levelSelect {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+button, select {
+  background-color: #333333;
+  color: var(--text-color);
+  border: 1px solid #555555;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: var(--font-family);
+  cursor: pointer;
+  font-size: 14px;
+}
+button:hover, select:hover { background-color: #444444; }
+button:active              { background-color: #555555; }
+#board-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 0;
-  flex-grow: 1;
 }
-
-#levelSelect {
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+#game-board {
+  display:          grid;
+  position:         relative;
+  line-height:      1;
+  border-spacing:   0;
+  background-color: var(--board-bg-color);
 }
-
-canvas {
-  border: 2px solid #000;
-  background-color: #c2c2c2;
-  touch-action: none;
-  max-width: 100%;
-  max-height: 100%; 
-  height: auto;
-  display: block;
+.tile {
+  width:           var(--tile-size);
+  height:          var(--tile-size);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       calc(var(--tile-size) * 0.6);
+  font-weight:     bold;
+  box-sizing:      border-box;
+  position:        relative;
 }
-
-#dpad { display: none; flex-direction: column; align-items: center; gap: 6px; user-select: none; margin-top: 12px; }
-
-#dpad.dpad-visible {
-  display: flex;
+.tile span { display: none; }
+.wall {
+  background-color: var(--wall-color);
+  border-radius:    4px;
+  border:           1px solid rgba(0, 0, 0, 0.2);
 }
-
-#dpad .row {
-  display: flex;
-  gap: 6px;
+.goal::before {
+  content:       '';
+  position:      absolute;
+  width:         calc(var(--tile-size) * 0.7);
+  height:        calc(var(--tile-size) * 0.7);
+  border:        2px dashed var(--goal-color);
+  border-radius: 4px;
+  box-sizing:    border-box;
+  opacity:       0.6;
 }
-
+.player, .player-on-goal { z-index: 3; }
+#player-sprite {
+  position:        absolute;
+  width:           var(--tile-size);
+  height:          var(--tile-size);
+  top:             0;
+  left:            0;
+  transform:       translate(0px, 0px);
+  transition:      transform 0.12s ease-out;
+  z-index:         10;
+  pointer-events:  none;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+}
+#player-sprite::after {
+  content:       '';
+  width:         calc(var(--tile-size) * 0.72);
+  height:        calc(var(--tile-size) * 0.72);
+  border-radius: 50%;
+  background:    radial-gradient(circle at 35% 35%,
+                   #80d8ff 0%,
+                   var(--player-color) 60%,
+                   #0288d1 100%);
+  box-shadow:    0 2px 4px rgba(0, 0, 0, 0.4);
+  display:       block;
+}
+.box { z-index: 2; }
+.box::after {
+  content:       '';
+  position:      absolute;
+  width:         calc(var(--tile-size) * 0.76);
+  height:        calc(var(--tile-size) * 0.76);
+  border-radius: 4px;
+  background:    var(--box-color);
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.25),
+    inset  3px  3px 0 rgba(255, 255, 255, 0.20),
+    0 2px 4px rgba(0, 0, 0, 0.35);
+}
+.box-on-goal { z-index: 2; }
+.box-on-goal::after {
+  content:       '';
+  position:      absolute;
+  width:         calc(var(--tile-size) * 0.76);
+  height:        calc(var(--tile-size) * 0.76);
+  border-radius: 4px;
+  background:    var(--box-on-goal-color);
+  outline:       2px solid rgba(255, 255, 255, 0.40);
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.25),
+    inset  3px  3px 0 rgba(255, 255, 255, 0.15);
+}
+#dpad {
+  display:     none;
+  flex-direction: column;
+  align-items: center;
+  gap:         6px;
+  user-select: none;
+  margin-top:  8px;
+}
+#dpad.dpad-visible { display: flex; }
+#dpad .row { display: flex; gap: 6px; }
 .dbtn {
-  width: 62px;
-  height: 62px;
+  width:         60px;
+  height:        60px;
   border-radius: 8px;
-  border: 1px solid #444;
-  background: rgba(255,255,255,0.9);
-  font-size: 22px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  touch-action: manipulation;
-}
-
-@media (max-height: 800px) and (min-aspect-ratio: 4/3) {
-  #game-container {
-    gap: 8px;
-    padding: 8px;
-  }
-  #topbar {
-    margin-bottom: 8px;
-  }
-  #dpad {
-    margin-top: 8px;
-  }
+  font-size:     24px;
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  touch-action:  manipulation;
 }

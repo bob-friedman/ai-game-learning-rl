@@ -58,7 +58,7 @@ ___
 
 ![Boxes Icon](docs/images/icon_boxes.png)
 
-Boxes is a minimalist puzzle game that challenges players with logic and spatial reasoning. Inspired by the classic Sokoban genre, the objective is to solve carefully designed levels by pushing boxes to their designated goal locations. The game emphasizes thoughtful planning over quick reflexes.
+Boxes is a minimalist puzzle game that challenges players with logic and spatial reasoning. Inspired by the classic Sokoban genre, the objective is to solve carefully designed levels by pushing boxes to their designated goal locations. The game uses a DOM-based grid system for rendering and emphasizes thoughtful planning over quick reflexes.
 
 ### Gameplay
 
@@ -298,6 +298,7 @@ The Boxes game logic is contained in `boxes/boxes.js`. The game state is managed
 -   **`boxes`**: An array of objects, where each object represents a box and its `x` and `y` coordinates.
 -   **`goals`**: An array of objects that stores the `x` and `y` coordinates of the goal locations.
 -   **`undoStack`**: This array stores a history of previous game states. Each element in the stack is an object containing the player and box positions for a prior move, making it an excellent source for sequential training data.
+-   **`INTERNAL_LEVEL_DATA`**: An object containing the complete collection of internalized level data in Sokoban format.
 -   **`parseSokobanLevels(text)`**: This function can be used to load custom level data in the Sokoban format, allowing for the creation of new and varied training environments.
 
 ### Grid Combat
