@@ -6,3 +6,5 @@ Microban IV (102 puzzles, August 2010)
 
 This set may be freely distributed provided they remain properly credited. Please visit this webpage for further details:
 http://www.abelmartin.com/rj/sokobanJS/Skinner/David%20W.%20Skinner%20-%20Sokoban.htm
+
+The game sprites were updated to a new type which originated from the LLMs, so this portion of the game is not licensed.
