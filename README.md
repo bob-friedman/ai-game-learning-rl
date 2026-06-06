@@ -260,7 +260,7 @@ ___
 
 ![Robotron Clone Screenshot](docs/images/screenshot_1_robotron.png)
 
-Robotron Clone is a fast-paced multi-directional shooter inspired by the classic arcade game Robotron: 2084. Players must survive waves of hostile robots while rescuing remaining humans. The game emphasizes quick reflexes and strategic movement in a chaotic, high-intensity environment.
+Robotron Clone is a fast-paced multi-directional shooter inspired by the classic arcade game Robotron: 2084. Players must survive waves of hostile robots while rescuing remaining humans. The game emphasizes quick reflexes and strategic movement in a chaotic, high-intensity environment. A diagnostic log file is exported at the end of each game session to facilitate analysis of the underlying AI model.
 
 ### Gameplay
 
@@ -268,7 +268,7 @@ The objective is to achieve the highest score possible by destroying enemies and
 - **Enemies**:
     - **Grunts**: Relentlessly chase the player.
     - **Hulks**: Indestructible robots that crush anything in their path, including humans and electrodes.
-    - **Brains**: Seek out and convert humans into lethal "Progs."
+    - **Brains**: Seek out and convert humans into lethal "Progs".
     - **Electrodes**: Stationary hazards that destroy the player and certain enemies on contact.
 - **Rescue**: Rescuing humans provides significant score bonuses that increase with each consecutive rescue in a wave.
 - **Progression**: Each wave increases in difficulty with more numerous and aggressive enemies.
