@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Robotron Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="ui-layer">
+    <header>
+        <div class="stat-box">
+            <span class="stat-label">SCORE</span>
+            <span id="scoreVal" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">HIGH</span>
+            <span id="highScore" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">WAVE</span>
+            <span id="waveVal" class="stat-value">1</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">LIVES</span>
+            <span id="livesVal" class="stat-value">3</span>
+        </div>
+    </header>
+</div>
+<div id="startScreen" class="screen">
+    <h1>ROBOTRON CLONE</h1>
+    <div class="instructions">
+        <p>
+            <span class="key-badge">W</span><span class="key-badge">A</span><span class="key-badge">S</span><span class="key-badge">D</span> MOVE &nbsp;&nbsp;
+            <span class="key-badge">ARROWS</span> FIRE
+        </p>
+        <p style="font-size: 12px; margin-top: 10px;">
+            GRUNTS(chase) HULKS(crush) BRAINS(capture)<br>
+        </p>
+    </div>
+    <button id="startBtn" class="btn-primary">INSERT COIN</button>
+</div>
+<div id="gameOverScreen" class="screen hidden">
+    <h1 style="color: #f00; text-shadow: 0 0 20px #f00;">GAME OVER</h1>
+    <p class="instructions">FINAL SCORE: <span id="finalScore" style="color:#0ff; font-size:32px;">0</span></p>
+    <button id="restartBtn" class="btn-primary">TRY AGAIN</button>
+</div>
+<div class="gamepad-container">
+    <div class="virtual-joystick" id="joystick">
+        <div class="joystick-handle"></div>
+    </div>
+    <div class="shoot-buttons">
+        <div class="shoot-btn shoot-btn-up" data-dir="up">?</div>
+        <div class="shoot-btn shoot-btn-down" data-dir="down">?</div>
+        <div class="shoot-btn shoot-btn-left" data-dir="left">?</div>
+        <div class="shoot-btn shoot-btn-right" data-dir="right">?</div>
+    </div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>

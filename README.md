@@ -256,9 +256,35 @@ Key features include:
 
 ![Othello Screenshot](docs/images/screenshot_1_othello.png)
 ___
+## Robotron Clone
+
+![Robotron Clone Screenshot](docs/images/screenshot_1_robotron.png)
+
+Robotron Clone is a fast-paced multi-directional shooter inspired by the classic arcade game Robotron: 2084. Players must survive waves of hostile robots while rescuing remaining humans. The game emphasizes quick reflexes and strategic movement in a chaotic, high-intensity environment.
+
+### Gameplay
+
+The objective is to achieve the highest score possible by destroying enemies and rescuing humans.
+- **Enemies**:
+    - **Grunts**: Relentlessly chase the player.
+    - **Hulks**: Indestructible robots that crush anything in their path, including humans and electrodes.
+    - **Brains**: Seek out and convert humans into lethal "Progs."
+    - **Electrodes**: Stationary hazards that destroy the player and certain enemies on contact.
+- **Rescue**: Rescuing humans provides significant score bonuses that increase with each consecutive rescue in a wave.
+- **Progression**: Each wave increases in difficulty with more numerous and aggressive enemies.
+
+### Controls
+
+Robotron Clone supports dual-stick style controls for both desktop and mobile.
+
+- **Keyboard**:
+    - **Movement**: `W`, `A`, `S`, `D` keys.
+    - **Firing**: `Arrow Keys` (Up, Down, Left, Right).
+- **Mobile**: Features a virtual joystick for movement and dedicated buttons for firing in four directions.
+___
 ## Installation
 
-To run the games locally, clone this repository and serve the directory chess/, boxes/, or grid-combat/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
+To run the games locally, clone this repository and serve the directory chess/, boxes/, othello/, robotron/, or grid-combat/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
 
 ```bash
 git clone https://github.com/bob-friedman/ai-game-learning-rl.git
@@ -333,6 +359,20 @@ The Othello game logic is contained within the `othello/index.html` file. The ga
 -   **`gameOver`**: A boolean flag that is true when the game has ended.
 -   **`calculateValidMoves(player)`**: Returns an array of `{r, c}` objects representing all legal moves for the specified player.
 -   **`calculateScores()`**: Returns an object `{1: blackScore, 2: whiteScore}` with the current piece counts.
+
+### Robotron Clone
+
+The Robotron Clone game logic is contained in `robotron/game.js`. Key data structures for RL include:
+
+- **`state`**: A global object containing the current game status:
+    - `score`, `wave`, `lives`, `frames`
+    - `width`, `height` (play area dimensions)
+    - `running` (boolean)
+- **`player`**: The player entity object with `x`, `y`, `vx`, `vy`, and `state`.
+- **`enemies`**: An array of active enemy objects (`grunt`, `hulk`, `brain`, `prog`, `electrode`).
+- **`humans`**: An array of human entities currently on the board.
+- **`bullets`**: An array of active projectiles from both the player and enemies.
+- **`Diagnostics`**: A system that can record and export detailed frame-by-turn state data. Calling `Diagnostics.exportLog()` will generate a text file of the session's history.
 
 ## Contributors
 
