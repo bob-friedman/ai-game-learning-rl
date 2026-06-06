@@ -1,0 +1,106 @@
+* { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; }
+body {
+    margin: 0; padding: 0; background: #000; overflow: hidden;
+    font-family: 'Courier New', Courier, monospace; color: #0f0;
+    display: flex; justify-content: center; align-items: center; height: 100vh;
+}
+#gameCanvas {
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+}
+#ui-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; display: flex; flex-direction: column;
+    justify-content: space-between; padding: 20px; z-index: 10;
+}
+header {
+    position: absolute;
+    top: auto !important;
+    bottom: 10px;
+    left: 0;
+    right: auto;
+    width: auto;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around;
+    align-items: center;
+    height: auto;
+}
+.stat-box { text-align: center; }
+.stat-label { font-size: 12px; display: block; opacity: 0.8; }
+.stat-value { font-size: 24px; }
+.screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 20;
+    pointer-events: auto; backdrop-filter: blur(4px);
+}
+.hidden { display: none !important; }
+h1 {
+    font-size: 48px; margin-bottom: 10px; color: #0ff;
+    text-shadow: 0 0 20px #0ff, 3px 3px 0 #f0f;
+    letter-spacing: 4px;
+}
+.instructions {
+    max-width: 600px; text-align: center; line-height: 1.6;
+    margin-bottom: 30px; font-size: 14px; color: #fff;
+}
+.key-badge {
+    display: inline-block; background: #111; border: 1px solid #0f0;
+    border-radius: 4px; padding: 2px 8px; color: #0ff; margin: 0 2px;
+    box-shadow: 0 0 5px #0f0;
+}
+button.btn-primary {
+    background: transparent; color: #0ff; font-family: inherit;
+    font-size: 24px; padding: 15px 40px; border: 2px solid #0ff;
+    cursor: pointer; text-transform: uppercase; letter-spacing: 3px;
+    box-shadow: 0 0 15px #0ff, inset 0 0 15px rgba(0,255,255,0.2);
+    transition: all 0.2s;
+}
+button.btn-primary:hover {
+    background: #0ff; color: #000;
+    box-shadow: 0 0 30px #0ff, inset 0 0 30px #0ff;
+}
+#highScore { color: #ff0; }
+.floater {
+    position: absolute; font-weight: bold; pointer-events: none;
+    animation: floatUp 1s forwards; font-size: 16px; z-index: 5;
+    text-shadow: 0 0 5px #000; font-family: 'Courier New', monospace;
+}
+@keyframes floatUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+}
+.gamepad-container {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 180px;
+    pointer-events: none; z-index: 15; display: none;
+}
+@media (max-width: 768px) { .gamepad-container { display: block; } }
+.virtual-joystick {
+    position: absolute; bottom: 20px; left: 20px; width: 100px; height: 100px;
+    background: rgba(0, 255, 0, 0.1); border: 2px solid #0f0;
+    border-radius: 50%; pointer-events: auto; touch-action: none;
+    box-shadow: 0 0 10px #0f0;
+}
+.joystick-handle {
+    position: absolute; width: 40px; height: 40px; background: #0f0;
+    border-radius: 50%; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); box-shadow: 0 0 10px #0f0;
+    pointer-events: none;
+}
+.shoot-buttons {
+    position: absolute; bottom: 20px; right: 20px; width: 140px; height: 140px;
+    pointer-events: auto;
+}
+.shoot-btn {
+    position: absolute; width: 45px; height: 45px;
+    background: rgba(255, 255, 0, 0.2); border: 2px solid #ff0;
+    border-radius: 50%; display: flex; justify-content: center;
+    align-items: center; color: #ff0; font-size: 20px;
+    box-shadow: 0 0 10px #ff0; touch-action: none;
+}
+.shoot-btn.active { background: rgba(255, 255, 0, 0.5); }
+.shoot-btn-up { top: 0; left: 47.5px; }
+.shoot-btn-down { bottom: 0; left: 47.5px; }
+.shoot-btn-left { top: 47.5px; left: 0; }
+.shoot-btn-right { top: 47.5px; right: 0; }
