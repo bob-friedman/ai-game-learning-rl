@@ -252,13 +252,8 @@ Key features include:
 - **Accessible Controls**: Mobile-friendly interface with an optional cursor-based navigation system for precise play on touch devices.
 - **Review Mode**: After a game concludes, players can review the final board state before starting a new match.
 
-### Screenshot
-
-![Othello Screenshot](docs/images/screenshot_1_othello.png)
 ___
 ## Robotron Clone
-
-![Robotron Clone Screenshot](docs/images/screenshot_1_robotron.png)
 
 Robotron Clone is a fast-paced multi-directional shooter inspired by the classic arcade game Robotron: 2084. Players must survive waves of hostile robots while rescuing remaining humans. The game emphasizes quick reflexes and strategic movement in a chaotic, high-intensity environment. A diagnostic log file is exported at the end of each game session to facilitate analysis of the underlying AI model.
 
@@ -281,6 +276,11 @@ Robotron Clone supports dual-stick style controls for both desktop and mobile.
     - **Movement**: `W`, `A`, `S`, `D` keys.
     - **Firing**: `Arrow Keys` (Up, Down, Left, Right).
 - **Mobile**: Features a virtual joystick for movement and dedicated buttons for firing in four directions.
+
+### Screenshot
+
+![Robotron Clone Screenshot](docs/images/screenshot_1_robotron.png)
+
 ___
 ## Installation
 
