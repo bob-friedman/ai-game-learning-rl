@@ -290,6 +290,18 @@ document.querySelectorAll('.shoot-btn').forEach(btn => {
     });
 });
 
+// Safety net: force-release all fire directions on any global pointer-up,
+// touch cancel, or focus loss. Without this, an "up" event that misses the
+// button (e.g. released over the game-over overlay, a window blur, or a
+// system-interrupted touch) would latch a direction true and autofire forever.
+function releaseFireButtons() {
+    keys['ArrowUp'] = keys['ArrowDown'] = keys['ArrowLeft'] = keys['ArrowRight'] = false;
+    document.querySelectorAll('.shoot-btn').forEach(b => b.classList.remove('active'));
+}
+['mouseup','touchend','touchcancel','blur'].forEach(evt => {
+    window.addEventListener(evt, releaseFireButtons);
+});
+
 // Base Classes
 class Entity {
     constructor(x,y,radius,color) {
@@ -617,25 +629,10 @@ class AuthenticHulk extends Entity {
             }
         });
 
-        // Find nearest human
-        let nearest = null;
-        let minD = Infinity;
-        humans.forEach(h => {
-            const d = this.dist(h);
-            if (d < minD) { minD = d; nearest = h; }
-        });
-
-        // Smooth 360-degree vector tracking
-        if (nearest && minD < 300) {
-            const desiredAngle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
-            // Smoothly steer toward the human
-            let diff = desiredAngle - this.targetAngle;
-            diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-            this.targetAngle += diff * 0.05;
-        } else {
-            // Wander randomly if no humans are nearby
-            if (Math.random() < 0.02) this.targetAngle += (Math.random() - 0.5) * 2;
-        }
+        // Hulks do NOT hunt humans. They lumber around semi-randomly and only
+        // kill a human by walking into it. This leaves humans available for the
+        // Brains to seek out and convert into Progs.
+        if (Math.random() < 0.02) this.targetAngle += (Math.random() - 0.5) * 2;
 
         // Move steadily
         this.x += Math.cos(this.targetAngle) * 0.9;
@@ -1316,6 +1313,10 @@ function update() {
 
 function startGame() {
     AudioSys.init();
+    // Clear any input that may have latched true between matches (e.g. a fire
+    // button whose release event was swallowed by the game-over overlay).
+    for (const key in keys) keys[key] = false;
+    document.querySelectorAll('.shoot-btn').forEach(b => b.classList.remove('active'));
     state.running = true;
     state.score = 0;
     state.lives = 3;
