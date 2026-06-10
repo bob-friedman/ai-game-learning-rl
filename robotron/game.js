@@ -693,6 +693,8 @@ class AuthenticBrain extends Entity {
         this.moveCount = 0;
         this.shootTimer = 60;
         this.dir = 0;
+        this.lastDir = -1;   // Direction taken last segment (anti-reversal)
+        this.detourDir = -1; // Committed detour direction while primary is blocked
         this.score = 500;
         this.walkPhase = 0;
         this.brainPulse = 0;
@@ -732,17 +734,23 @@ class AuthenticBrain extends Entity {
                 return false;
             };
 
+            // Capture pre-move position so we can detect being pinned by a wall
+            const preX = this.x, preY = this.y;
             if (!checkCollision(desiredX, desiredY)) {
                 this.x = desiredX;
                 this.y = desiredY;
                 this.moveCount -= speed;
+                this.clamp();
+                // The old check compared against the post-move position,
+                // so any normal step (where clamp does nothing) zeroed moveCount.
+                // That forced a re-target every single step (worsening Electrode
+                // oscillation) and halved the Brain's effective speed to 0.7,
+                // making it slower than panicking Humans (1.2). Now we only stop
+                // when a wall clamp cancels the entire move.
+                if (this.x === preX && this.y === preY) {
+                    this.moveCount = 0;
+                }
             } else {
-                this.moveCount = 0;
-            }
-
-            const oldX = this.x, oldY = this.y;
-            this.clamp();
-            if (this.x === oldX && this.y === oldY && (d.x !== 0 || d.y !== 0)) {
                 this.moveCount = 0;
             }
 
@@ -776,34 +784,92 @@ class AuthenticBrain extends Entity {
                 secondaryDir = dx > 0 ? 1 : 3;
             }
 
-            const checkDir = (dirIndex) => {
+            // Graded probe: 0 = fully clear, 1 = clear nearby but an Electrode
+            // sits 20-28px out (tight gap / approaching obstacle), 2 = blocked.
+            // Probing ~28px out makes the Brain commit to a detour before
+            // entering dead-end concave Electrode pockets, while the graded
+            // result still lets it squeeze through tight gaps when nothing is
+            // fully clear.
+            const probeDir = (dirIndex) => {
                 const d = dirs[dirIndex];
-                const testX = this.x + d.x * 4;
-                const testY = this.y + d.y * 4;
 
-                if (testX <= this.radius || testX >= state.width - this.radius) return true;
-                if (testY <= this.radius || testY >= state.height - this.radius) return true;
+                // Wall check — only on the axis of travel. The old check tested
+                // BOTH axes for every direction, so a Brain flush against a wall
+                // (e.g. y === radius at the top) saw even left/right as blocked
+                // and could only bounce back and forth, never sliding along the
+                // wall toward Humans cornered against it.
+                if (d.x !== 0) {
+                    const wallX = this.x + d.x * 4;
+                    if (wallX <= this.radius || wallX >= state.width - this.radius) return 2;
+                }
+                if (d.y !== 0) {
+                    const wallY = this.y + d.y * 4;
+                    if (wallY <= this.radius || wallY >= state.height - this.radius) return 2;
+                }
 
-                for (let e of enemies) {
-                    if (e.type === 'electrode' && !e.marked) {
-                        if (Math.hypot(testX - e.x, testY - e.y) < this.radius + e.radius + 1) return true;
+                let result = 0;
+                for (let step = 4; step <= 28; step += 8) {
+                    const testX = this.x + d.x * step;
+                    const testY = this.y + d.y * step;
+                    for (let e of enemies) {
+                        if (e.type === 'electrode' && !e.marked) {
+                            if (Math.hypot(testX - e.x, testY - e.y) < this.radius + e.radius + 1) {
+                                if (step <= 12) return 2; // Blocked within this move segment
+                                result = 1;               // Blocked only at long range
+                            }
+                        }
                     }
                 }
-                return false;
+                return result;
             };
 
-            // Smart Pathing
-            if (!checkDir(primaryDir)) {
+            // Smart Pathing with detour persistence.
+            // Old logic re-evaluated greedily every segment: blocked primary ->
+            // sidestep -> primary looks clear -> turn back -> blocked again.
+            // The Brain wobbled in place against an Electrode and never reached
+            // fleeing Humans. Now, once a detour direction is chosen it is kept
+            // until the primary direction is genuinely traversable, and the
+            // Brain avoids instantly reversing its previous direction.
+            const pPrimary = probeDir(primaryDir);
+            if (pPrimary === 0) {
                 this.dir = primaryDir;
-            } else if (!checkDir(secondaryDir)) {
-                this.dir = secondaryDir;
+                this.detourDir = -1; // Path to target is clear, drop any detour
+            } else if (this.detourDir >= 0 && probeDir(this.detourDir) === 0) {
+                // Keep going around the obstacle instead of flip-flopping
+                this.dir = this.detourDir;
             } else {
-                let oppSecondary = (secondaryDir + 2) % 4;
-                let oppPrimary = (primaryDir + 2) % 4;
-                if (!checkDir(oppSecondary)) this.dir = oppSecondary;
-                else if (!checkDir(oppPrimary)) this.dir = oppPrimary;
-                else this.dir = Math.floor(Math.random() * 4);
+                const reverseDir = this.lastDir >= 0 ? (this.lastDir + 2) % 4 : -1;
+                const candidates = [secondaryDir, (secondaryDir + 2) % 4, (primaryDir + 2) % 4];
+                let chosen = -1;
+                // 1) A fully clear direction that doesn't reverse the last move
+                for (const c of candidates) {
+                    if (c !== reverseDir && probeDir(c) === 0) { chosen = c; break; }
+                }
+                // 2) A fully clear direction, even if it reverses
+                if (chosen < 0) {
+                    for (const c of candidates) {
+                        if (probeDir(c) === 0) { chosen = c; break; }
+                    }
+                }
+                // 3) Nothing fully clear: squeeze toward the target through a
+                //    tight gap (clear for this segment, Electrode beyond it)
+                if (chosen < 0 && pPrimary === 1) chosen = primaryDir;
+                if (chosen < 0) {
+                    for (const c of candidates) {
+                        if (c !== reverseDir && probeDir(c) === 1) { chosen = c; break; }
+                    }
+                }
+                if (chosen < 0) {
+                    for (const c of candidates) {
+                        if (probeDir(c) === 1) { chosen = c; break; }
+                    }
+                }
+                // 4) Fully boxed in: pick at random and let the push-out resolve
+                if (chosen < 0) chosen = Math.floor(Math.random() * 4);
+                this.dir = chosen;
+                this.detourDir = chosen;
             }
+            this.lastDir = this.dir;
         }
 
         // Convert Humans (Now uses radial distance so corner trapping works)
