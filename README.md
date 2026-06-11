@@ -264,18 +264,17 @@ The objective is to achieve the highest score possible by destroying enemies and
     - **Grunts**: Relentlessly chase the player.
     - **Hulks**: Indestructible robots that crush anything in their path, including humans and electrodes.
     - **Brains**: Seek out and convert humans into lethal "Progs".
-    - **Electrodes**: Stationary hazards that destroy the player and certain enemies on contact.
+    - **Electrodes**: Stationary hazards upon contact by the player and enemy units.
 - **Rescue**: Rescuing humans provides significant score bonuses that increase with each consecutive rescue in a wave.
 - **Progression**: Each wave increases in difficulty with more numerous and aggressive enemies.
 
 ### Controls
 
-Robotron Clone supports dual-stick style controls for both desktop and mobile.
+Robotron Clone supports dual-stick style controls on a desktop system.
 
 - **Keyboard**:
     - **Movement**: `W`, `A`, `S`, `D` keys.
     - **Firing**: `Arrow Keys` (Up, Down, Left, Right).
-- **Mobile**: Features a virtual joystick for movement and dedicated buttons for firing in four directions.
 
 ### Screenshot
 
