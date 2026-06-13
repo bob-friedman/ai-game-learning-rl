@@ -171,38 +171,7 @@ This section documents an autonomous research system developed for iterative imp
 
 A closed loop runs on Google Colab, leveraging Gemini 2.5 Flash-Lite (via API) or a local Qwen 2.5 3B model (T4 GPU). The language model proposes modifications to `ai.js`; a Node.js evaluator measures win rate across 400 games; the harness backups, evaluates, and keeps or reverts each change without human intervention. All progress is persisted to Google Drive via a zip archive, surviving session expiry.
 
-The system implements two complementary loops. Loop 1 runs autonomously and is suited to parameter tuning and simple heuristic additions. Loop 2 is human-guided and addresses targeted algorithmic changes — for example, correcting ranged unit positioning — that win rate alone cannot diagnose. A Loop 2 change is injected into `ai.js` manually, then Loop 1 resumes and fine-tunes within the expanded capability.
-
-```mermaid
-flowchart TD
-    subgraph L1["Loop 1 — Autoresearch (continuous)"]
-        A([Start / Resume]) --> B[Read ai.js<br/>+ build prompt]
-        B --> C["Inference<br/>Gemini 2.5 Flash-Lite<br/>or Qwen 2.5 3B"]
-        C --> D{Parse<br/>response}
-        D -- "no JS found" --> B
-        D -- "JS extracted" --> E{Sanity<br/>check}
-        E -- fail --> B
-        E -- pass --> F[backup ai.js<br/>log change]
-        F --> G["Evaluate<br/>400 games · Node.js"]
-        G --> H{"win_rate<br/>returned?"}
-        H -- crash --> I["Revert<br/>restore from backup<br/>store error tail"]
-        I --> B
-        H -- yes --> J{"win_rate<br/>> best?"}
-        J -- no --> K["Discard<br/>restore from backup"]
-        K --> B
-        J -- yes --> L["Keep<br/>update best<br/>save zip to Drive"]
-        L --> B
-    end
-
-    subgraph L2["Loop 2 — Directed Research (human-guided)"]
-        M["Observe gameplay<br/>identify failure mode"]
-        M --> N["Reason with game constants<br/>damage tables · code structure"]
-        N --> O["Write targeted change<br/>to ai.js"]
-        O --> P[log change<br/>save zip to Drive]
-    end
-
-    P -- "inject & resume" --> A
-```
+The system implements two complementary loops. Loop 1 runs autonomously and is suited to parameter tuning and simple heuristic additions. Loop 2 is human-guided and addresses targeted algorithmic changes — for example, correcting ranged unit positioning — that win rate alone cannot diagnose. A Loop 2 change is injected into `ai.js` manually, then Loop 1 resumes and fine-tunes within the expanded capability. For more information, see the [Sparsity Resolution](autoresearch/SPARSITY_RESOLUTION.md) research document.
 
 #### Empirical Results
 
