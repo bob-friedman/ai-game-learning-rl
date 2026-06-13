@@ -38,7 +38,7 @@ Mandelbrot extended this observation to the Zipf-Mandelbrot Law, incorporating p
 
 To mitigate the zero-probability assignments imposed by these Zipfian tails, early researchers developed discounting techniques. Absolute Discounting subtracts a fixed constant $d$ (where $0 \leq d \leq 1$) from the count of each observed n-gram. This frees up a pool of probability mass to be allocated to unseen events. The absolute discounting bigram model is formulated as:
 
-$$P_{\text{AbsoluteDiscounting}}(w_i | w_{i-1}) = \frac{\max(C(w_{i-1}w_i) - d, 0)}{C(w_{i-1})} + \lambda(w_{i-1}) P(w_i) \quad \text{[6, 20]}$$
+$$P_{\text{AbsoluteDiscounting}}(w_i | w_{i-1}) = \frac{\max(C(w_{i-1}w_i) - d, 0)}{C(w_{i-1})} + \lambda(w_{i-1}) P(w_i) \quad$$
 
 where the normalization constant $\lambda(w_{i-1})$ represents the total discounted mass distributed proportionally to a lower-order unigram model $P(w_i)$. Church and Gale's empirical study of this phenomenon on a 22-million-word AP newswire corpus demonstrated that subtracting a constant discount from high-count bigrams yields remarkably robust estimates on held-out test data.
 
@@ -46,15 +46,15 @@ This paradigm culminated in Kneser-Ney Smoothing, proposed in 1994 by Reinhard K
 
 Consider the proper noun bigram "San Francisco". The word "Francisco" exhibits a high unigram count solely due to its appearance after "San". In a novel context where the history is unfamiliar, a model backing off to standard unigram frequencies would erroneously assign a high probability to "Francisco". Kneser-Ney addresses this by defining $P_{\text{continuation}}$ as the ratio of unique preceding contexts a word completes, rather than its absolute frequency :
 
-$$P_{\text{continuation}}(w_i) = \frac{|\{w_{i-1} : C(w_{i-1}w_i) > 0\}|}{\sum_{w'} |\{w_{i-1} : C(w_{i-1}w') > 0\}|} \quad \text{[6, 20]}$$
+$$P_{\text{continuation}}(w_i) = \frac{|\{w_{i-1} : C(w_{i-1}w_i) > 0\}|}{\sum_{w'} |\{w_{i-1} : C(w_{i-1}w') > 0\}|} \quad$$
 
 Under this formulation, "Francisco" has a very low continuation probability because it is preceded almost exclusively by "San". The general recursive formulation of Interpolated Kneser-Ney smoothing for an arbitrary n-gram is defined as:
 
-$$P_{\text{KN}}(w_i | w_{i-n+1}^{i-1}) = \frac{\max(c_{\text{KN}}(w_{i-n+1}^i) - d, 0)}{\sum_{v} c_{\text{KN}}(w_{i-n+1}^{i-1}v)} + \lambda(w_{i-n+1}^{i-1}) P_{\text{KN}}(w_i | w_{i-n+2}^{i-1}) \quad \text{[6]}$$
+$$P_{\text{KN}}(w_i | w_{i-n+1}^{i-1}) = \frac{\max(c_{\text{KN}}(w_{i-n+1}^i) - d, 0)}{\sum_{v} c_{\text{KN}}(w_{i-n+1}^{i-1}v)} + \lambda(w_{i-n+1}^{i-1}) P_{\text{KN}}(w_i | w_{i-n+2}^{i-1}) \quad$$
 
 The count function $c_{\text{KN}}$ adapts dynamically: it represents the empirical count for the highest-order n-gram and the continuation count for all lower-order terms. At the termination of the recursion, unigrams are interpolated with a uniform distribution over the vocabulary $V$ :
 
-$$P_{\text{KN}}(w) = \frac{\max(c_{\text{KN}}(w) - d, 0)}{\sum_{w'} c_{\text{KN}}(w')} + \lambda(\epsilon) \frac{1}{V} \quad \text{[6]}$$
+$$P_{\text{KN}}(w) = \frac{\max(c_{\text{KN}}(w) - d, 0)}{\sum_{w'} c_{\text{KN}}(w')} + \lambda(\epsilon) \frac{1}{V} \quad$$
 
 Unknown words ($<\text{UNK}>$) are handled as regular vocabulary entries with zero counts, mapping directly to a lambda-weighted uniform distribution. While Kneser-Ney smoothing remained the state-of-the-art language modeling technique for over fifteen years—powering commercial MapReduce translation pipelines at Google and highly optimized structures like KenLM—it was fundamentally limited by its inability to capture long-range semantic dependencies beyond its local n-gram context window.
 
@@ -75,21 +75,21 @@ Layer L (Output): Medium (Slight Expansion for Vocabulary Projection)
 
 To analyze this space, the latent manifold $\mathcal{M}$ is equipped with the Fisher Information Metric $G(h)$, which acts as a Riemannian metric derived from the model's output probability distribution. For a hidden state $h$, the Fisher metric is formulated as:
 
-$$G(h) = W^\top \Sigma_p W \quad \text{[9, 25, 26]}$$
+$$G(h) = W^\top \Sigma_p W \quad$$
 
 where $W \in \mathbb{R}^{V \times d}$ is the unembedding matrix, and $\Sigma_p = \text{diag}(p) - pp^\top$ is the softmax covariance of the token distribution $p$. In this geometric formulation, tokens correspond to Voronoi regions that partition the semantic manifold, and language generation becomes a measure-theoretic projection from continuous hidden states onto these discrete Voronoi cells.
 
 The boundary between these Voronoi cells represents a region of high uncertainty. For a hidden state $h$, the Voronoi margin is defined as the difference between the top two token logits :
 
-$$m(h) = \ell_{t^*}(h) - \ell_{t^{**}}(h) \quad \text{[27]}$$
+$$m(h) = \ell_{t^*}(h) - \ell_{t^{**}}(h) \quad$$
 
 This margin allows researchers to define the expressibility gap $\eta(\epsilon)$, representing the fraction of semantic space where the discrete vocabulary fails to confidently resolve continuous states :
 
-$$\eta(\epsilon) = \frac{\mu(\{h \in \mathcal{M} : m(h) < \epsilon\})}{\text{vol}(\mathcal{M})} \quad \text{[27]}$$
+$$\eta(\epsilon) = \frac{\mu(\{h \in \mathcal{M} : m(h) < \epsilon\})}{\text{vol}(\mathcal{M})} \quad$$
 
 Under regularity conditions, the expressibility gap obeys a linear volume scaling law as $\epsilon \to 0^+$ :
 
-$$\eta(\epsilon) = \alpha \cdot \epsilon + \mathcal{O}(\epsilon^2) \quad \text{[27]}$$
+$$\eta(\epsilon) = \alpha \cdot \epsilon + \mathcal{O}(\epsilon^2) \quad$$
 
 This relationship, proven via the coarea formula, indicates a persistent "hard core" of boundary-proximal states where token selection is inherently unstable. Models can be post-hoc intervened upon to maximize this margin using Fisher information distance, compressing the expressibility gap by restructuring the Voronoi tessellation without losing downstream task accuracy.
 
@@ -117,7 +117,7 @@ Artificial networks mirror this dynamic through the Superposition Hypothesis. Wh
 
 To isolate these superimposed features for mechanistic analysis, researchers train Sparse Autoencoders (SAEs) on intermediate network activations. An SAE projects the activations into an overcomplete hidden layer of size $F \gg N$. It is regularized to reconstruct the input while minimizing active latents, typically leveraging an $\ell_1$ penalty to drive coordinates to zero :
 
-$$\mathcal{L}_{\text{SAE}} = \|z - W_d \sigma(W_e z + b_e) - b_d\|_2^2 + \beta \|\sigma(W_e z + b_e)\|_1 \quad \text{[37, 39, 43]}$$
+$$\mathcal{L}_{\text{SAE}} = \|z - W_d \sigma(W_e z + b_e) - b_d\|_2^2 + \beta \|\sigma(W_e z + b_e)\|_1 \quad$$
 
 Standard vector-based SAEs, however, suffer from feature splitting. Because real-world semantic features are often multi-dimensional (intrinsic dimension $d_i \geq 2$), attempting to represent them using one-dimensional, single-vector decoder directions forces the autoencoder to fragment a single coherent concept across many near-collinear latents.
 
@@ -140,13 +140,13 @@ Historically, the concept of MoE originated in 1991 with the Adaptive Mixture of
 
 In a standard MoE transformer block, the computationally heavy Feed-Forward Network (FFN) layer is replaced by an MoE block, while the self-attention layer remains shared across all paths. The routing network scores each expert for a token $x$, applying a softmax over the top-performing expert projections :
 
-$$G(x) = \text{Softmax}(\text{KeepTopK}(W_g x + H_{\text{noise}}(x), K)) \quad \text{[45]}$$
+$$G(x) = \text{Softmax}(\text{KeepTopK}(W_g x + H_{\text{noise}}(x), K)) \quad$$
 
 where $W_g$ represents the gating parameters, and $H_{\text{noise}}$ is a tunable Gaussian noise matrix used to promote expert diversity during early training phases.
 
 A major challenge in MoE training is load balancing. Because routing decisions are learned end-to-end, routers are prone to a positive feedback loop where a small subset of experts is continuously selected. This causes the remaining experts to be underutilized, degrading the model's overall representational capacity. To enforce uniform expert utilization, models incorporate an auxiliary load-balancing loss $\mathcal{L}_{\text{aux}}$ across each batch :
 
-$$\mathcal{L}_{\text{aux}} = E \sum_{i=1}^E f_i \cdot P_i \quad \text{[45]}$$
+$$\mathcal{L}_{\text{aux}} = E \sum_{i=1}^E f_i \cdot P_i \quad$$
 
 where $E$ is the number of experts, $f_i$ is the fraction of batch tokens routed to expert $i$, and $P_i$ is the fraction of the router's probability mass allocated to expert $i$.
 
