@@ -224,7 +224,7 @@ Key features include:
 ___
 ## Robotron Clone
 
-Robotron Clone is a fast-paced multi-directional shooter inspired by the classic arcade game Robotron: 2084. Players must survive waves of hostile robots while rescuing remaining humans. The game emphasizes quick reflexes and strategic movement in a chaotic, high-intensity environment. A diagnostic log file is exported at the end of each game session to facilitate analysis of the underlying AI model.
+Robotron Clone is a fast-paced multi-directional shooter inspired by the classic arcade game Robotron: 2084 (Eugene Jarvis & Larry DeMar, Williams Electronics, 1982). Players must survive waves of hostile robots while rescuing remaining humans. The game emphasizes quick reflexes and strategic movement in a chaotic, high-intensity environment. A diagnostic log file is exported at the end of each game session to facilitate analysis of the underlying AI model.
 
 ### Gameplay
 
