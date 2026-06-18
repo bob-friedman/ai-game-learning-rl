@@ -41,20 +41,58 @@ const AudioSys = {
     },
     shoot: function() {
         if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
+        const t = this.ctx.currentTime;
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.1);
-        osc.connect(gain);
+
+        osc1.type = 'square';
+        osc1.frequency.setValueAtTime(1600, t);
+        osc1.frequency.exponentialRampToValueAtTime(100, t + 0.12);
+
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(1200, t);
+        osc2.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
         gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.1);
+
+        osc1.start(t);
+        osc2.start(t);
+        osc1.stop(t + 0.12);
+        osc2.stop(t + 0.12);
     },
     explosion: function(large=false) {
-        this.playNoise(large ? 0.5 : 0.2, large ? 0.4 : 0.2);
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const dur = large ? 0.5 : 0.25;
+        const bufferSize = this.ctx.sampleRate * dur;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(large ? 1000 : 1500, t);
+        filter.frequency.exponentialRampToValueAtTime(100, t + dur);
+        filter.Q.value = 1;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(large ? 0.4 : 0.2, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        noise.start(t);
     },
     rescue: function() {
         this.playTone(880, 'sine', 0.1, 0.1);
@@ -172,8 +210,9 @@ const WAVES = [
 ];
 
 function getWaveConfig(waveNum) {
-    if (waveNum % 5 === 0) {
-        let scaling = Math.floor(waveNum / 5);
+    // Tanks appear every fourth level instead of every fifth
+    if (waveNum % 4 === 0) {
+        let scaling = Math.floor(waveNum / 4);
         return {
             Grunt: 0, Hulk: 0, Brain: 0, Tank: 8 + (scaling * 2),
             Daddy: 2, Mommy: 2, Mikey: 2, Electrode: 8 + (scaling * 2)
@@ -445,6 +484,8 @@ class AuthenticPlayer extends Entity {
         this.cooldown = 0;
         this.spritesheetY = 0;
         this.frameTimer = 0;
+        this.aimX = 1;
+        this.aimY = 0;
     }
     update() {
         if (this.state === 'spawning') {
@@ -468,11 +509,15 @@ class AuthenticPlayer extends Entity {
         let sx = 0, sy = 0;
         if (keys['ArrowUp']) sy = -1; if (keys['ArrowDown']) sy = 1;
         if (keys['ArrowLeft']) sx = -1; if (keys['ArrowRight']) sx = 1;
-        if ((sx !== 0 || sy !== 0) && this.cooldown <= 0) {
+        if ((sx !== 0 || sy !== 0)) {
             const len = Math.hypot(sx, sy);
-            bullets.push(new Bullet(this.x, this.y, sx/len, sy/len, false));
-            this.cooldown = 7;
-            AudioSys.shoot();
+            this.aimX = sx/len;
+            this.aimY = sy/len;
+            if (this.cooldown <= 0) {
+                bullets.push(new Bullet(this.x, this.y, this.aimX, this.aimY, false));
+                this.cooldown = 7;
+                AudioSys.shoot();
+            }
         }
     }
     draw() {
@@ -491,29 +536,48 @@ class AuthenticPlayer extends Entity {
 
         if (ImageCache.draw(ctx, this.type, this.x, this.y, this.frameTimer, this.spritesheetY)) return;
 
-        // Procedural Fallback
+        // Procedural Fallback (Authentic arcade sci-fi look)
         const walkPhase = this.frameTimer * 0.15;
         const phase = Math.sin(walkPhase);
-        const bob = phase * .05, armSwing = phase * .08, legStretch = phase * .06;
+        const bob = phase * .05, legStretch = phase * .06;
         const hue = isInvuln ? (state.frames * .05) % 1 : 0;
-        const body = isInvuln ? hsl(hue, 1, .7) : rgb(.95, .95, .95);
-        const head = isInvuln ? hsl((hue + .33) % 1, 1, .6) : rgb(1, .2, .2);
-        const headDark = isInvuln ? hsl((hue + .33) % 1, 1, .3) : rgb(.55, .05, .05);
-        const dark = isInvuln ? hsl((hue + .66) % 1, .8, .4) : rgb(.25, .25, .3);
-        const eyes = rgb(1, 1, 1);
+
+        const body = isInvuln ? hsl(hue, 1, .7) : '#e65c00'; // Orange torso
+        const legs = isInvuln ? hsl((hue + .5)%1, 1, .5) : '#0055aa'; // Blue legs/armor
+        const helmet = isInvuln ? hsl((hue + .2)%1, 1, .6) : '#dddddd'; // Light gray helmet
+        const visor = isInvuln ? hsl((hue + .8)%1, 1, .5) : '#00ffff'; // Cyan visor
+
         const bodyCenterY = -.02 + bob, bodyBottomY = bodyCenterY - .275;
-        drawSpriteRect(this.x, this.y, 0, -.55, .7, .14, 'rgba(0,0,0,0.4)');
-        const baseLegH = .32, leftLegH = baseLegH + legStretch, rightLegH = baseLegH - legStretch;
-        drawSpriteRect(this.x, this.y, -.14, bodyBottomY - leftLegH /2, .2, leftLegH, dark);
-        drawSpriteRect(this.x, this.y, .14, bodyBottomY - rightLegH/2, .2, rightLegH, dark);
-        drawSpriteRect(this.x, this.y, 0, bodyCenterY, .55, .55, body);
-        drawSpriteRect(this.x, this.y, -.35, bodyCenterY + armSwing, .16, .42, body);
-        drawSpriteRect(this.x, this.y, .35, bodyCenterY - armSwing, .16, .42, body);
-        drawSpriteRect(this.x, this.y, 0, .42 + bob, .6, .5, head);
-        drawSpriteRect(this.x, this.y, 0, .22 + bob, .62, .08, headDark);
-        drawSpriteRect(this.x, this.y, 0, .42 + bob, .42, .1, headDark);
-        drawSpriteRect(this.x, this.y, -.1, .42 + bob, .08, .08, eyes);
-        drawSpriteRect(this.x, this.y, .1, .42 + bob, .08, .08, eyes);
+
+        // Shadow
+        drawSpriteRect(this.x, this.y, 0, -.5, .6, .12, 'rgba(0,0,0,0.4)');
+
+        // Legs
+        const baseLegH = .3, leftLegH = baseLegH + legStretch, rightLegH = baseLegH - legStretch;
+        drawSpriteRect(this.x, this.y, -.15, bodyBottomY - leftLegH/2, .2, leftLegH, legs);
+        drawSpriteRect(this.x, this.y, .15, bodyBottomY - rightLegH/2, .2, rightLegH, legs);
+
+        // Torso
+        drawSpriteRect(this.x, this.y, 0, bodyCenterY, .5, .5, body);
+
+        // Shoulders/Armor accents
+        drawSpriteRect(this.x, this.y, 0, bodyCenterY + .15, .6, .2, legs);
+
+        // Head (Helmet)
+        drawSpriteRect(this.x, this.y, 0, .4 + bob, .45, .45, helmet);
+        // Visor
+        drawSpriteRect(this.x, this.y, 0, .45 + bob, .35, .15, visor);
+
+        // Gun arm / weapon
+        const aimAng = Math.atan2(this.aimY, this.aimX);
+        ctx.save();
+        ctx.translate(this.x, this.y - bodyCenterY * SPRITE_SCALE);
+        ctx.rotate(aimAng);
+        ctx.fillStyle = '#444';
+        ctx.fillRect(0, -4, 15, 8); // Gun barrel
+        ctx.fillStyle = '#0ff';
+        ctx.fillRect(11, -2, 4, 4); // Glowing tip
+        ctx.restore();
     }
 }
 
@@ -576,45 +640,40 @@ class AuthenticGrunt extends Entity {
     draw() {
         if (ImageCache.draw(ctx, this.type, this.x, this.y, this.frameTimer, 0)) return;
 
-        const walkPhase = this.frameTimer * 0.3;
-        // Calculate a marching stride (-1 to 1)
-        const stride = Math.sin(walkPhase * Math.PI);
-        const bob = Math.abs(stride) * 0.08;
+        // Brightened Scrap Drone Redesign
+        const hoverPhase = this.frameTimer * 0.1;
+        const float = Math.sin(hoverPhase) * 0.1;
+        const bob = float;
 
-        const red = '#f00', yellow = '#ff0', green = '#0f0', purple = '#a0f', white = '#fff';
+        // Much brighter, pop-out arcade colors
+        const metal = '#aaccdd', darkMetal = '#667788', rust = '#ee6622', glow = '#ffaa00';
 
         // Shadow
         drawSpriteRect(this.x, this.y, 0, -.6, .7, .15, 'rgba(0,0,0,0.3)');
 
-        // Legs & Feet (Alternating stride)
-        const leftLegY = stride > 0 ? -.4 : -.5;
-        const rightLegY = stride < 0 ? -.4 : -.5;
+        // Hover exhaust plume
+        const exhaustH = .3 + Math.random() * .2;
+        drawSpriteRect(this.x, this.y, 0, -.4 + bob, .15, exhaustH, 'rgba(0, 255, 255, 0.6)');
+        drawSpriteRect(this.x, this.y, 0, -.4 + bob, .08, exhaustH, '#fff');
 
-        // Left Leg (Red) & Foot (Yellow)
-        drawSpriteRect(this.x, this.y, -.2, leftLegY, .15, .2, red);
-        drawSpriteRect(this.x, this.y, -.2, leftLegY - .1, .25, .1, yellow);
+        // Main Body (Round/Chunky shell)
+        drawSpriteRect(this.x, this.y, 0, 0 + bob + float, .55, .55, darkMetal);
+        drawSpriteRect(this.x, this.y, 0, 0 + bob + float, .45, .45, metal);
 
-        // Right Leg (Red) & Foot (Yellow)
-        drawSpriteRect(this.x, this.y, .2, rightLegY, .15, .2, red);
-        drawSpriteRect(this.x, this.y, .2, rightLegY - .1, .25, .1, yellow);
+        // Rusty side thrusters / shoulder pads
+        drawSpriteRect(this.x, this.y, -.3, .2 + bob + float, .15, .3, rust);
+        drawSpriteRect(this.x, this.y, .3, .2 + bob + float, .15, .3, rust);
 
-        // Body (Red block)
-        drawSpriteRect(this.x, this.y, 0, -.05 + bob, .55, .55, red);
+        // Central Eye / Scanner (Cylon style)
+        const scannerX = Math.sin(this.frameTimer * 0.15) * 0.15;
+        drawSpriteRect(this.x, this.y, 0, .1 + bob + float, .35, .15, '#400');
+        drawSpriteRect(this.x, this.y, scannerX, .1 + bob + float, .12, .1, glow);
 
-        // Chest emblem (White stylized 'T')
-        drawSpriteRect(this.x, this.y, 0, 0 + bob, .3, .15, white);
-        drawSpriteRect(this.x, this.y, 0, -.15 + bob, .12, .15, white);
-
-        // Arms (Yellow, swinging opposite to legs)
-        drawSpriteRect(this.x, this.y, -.38, -.05 + bob + (stride < 0 ? .1 : -.1), .15, .35, yellow);
-        drawSpriteRect(this.x, this.y, .38, -.05 + bob + (stride > 0 ? .1 : -.1), .15, .35, yellow);
-
-        // Head (Red base with Green & Purple Visor)
-        drawSpriteRect(this.x, this.y, 0, .3 + bob, .4, .2, red);
-        drawSpriteRect(this.x, this.y, 0, .4 + bob, .48, .12, purple);
-        drawSpriteRect(this.x, this.y, 0, .52 + bob, .48, .12, green);
+        // Spiky arms/antennae reaching forward
+        drawSpriteRect(this.x, this.y, -.4, -.1 + bob + float, .08, .35, darkMetal);
+        drawSpriteRect(this.x, this.y, .4, -.1 + bob + float, .08, .35, darkMetal);
     }
-    hit() { this.marked = true; explode(this.x, this.y, '#f00'); return true; }
+    hit() { this.marked = true; explode(this.x, this.y, '#ffaa00'); return true; }
 }
 
 class AuthenticHulk extends Entity {
