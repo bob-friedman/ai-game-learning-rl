@@ -233,6 +233,7 @@ The objective is to achieve the highest score possible by destroying enemies and
     - **Grunts**: Relentlessly chase the player.
     - **Hulks**: Indestructible robots that crush anything in their path, including humans and electrodes.
     - **Brains**: Seek out and convert humans into lethal "Progs".
+    - **Tanks**: Swivelling turret robots that bombard the player with bouncing bombs.
     - **Electrodes**: Stationary hazards upon contact by the player and enemy units.
 - **Rescue**: Rescuing humans provides significant score bonuses that increase with each consecutive rescue in a wave.
 - **Progression**: Each wave increases in difficulty with more numerous and aggressive enemies.
@@ -337,7 +338,7 @@ The Robotron Clone game logic is contained in `robotron/game.js`. Key data struc
     - `width`, `height` (play area dimensions)
     - `running` (boolean)
 - **`player`**: The player entity object with `x`, `y`, `vx`, `vy`, and `state`.
-- **`enemies`**: An array of active enemy objects (`grunt`, `hulk`, `brain`, `prog`, `electrode`).
+- **`enemies`**: An array of active enemy objects (`grunt`, `hulk`, `brain`, `prog`, `tank`, `electrode`).
 - **`humans`**: An array of human entities currently on the board.
 - **`bullets`**: An array of active projectiles from both the player and enemies.
 - **`Diagnostics`**: A system that can record and export detailed frame-by-turn state data. Calling `Diagnostics.exportLog()` will generate a text file of the session's history.

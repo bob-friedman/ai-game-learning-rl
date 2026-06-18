@@ -617,7 +617,9 @@ class AuthenticGrunt extends Entity {
             if (this.dx !== 0 && !this.checkCollision(desiredX, this.y)) this.x = desiredX;
             else if (this.dy !== 0 && !this.checkCollision(this.x, desiredY)) this.y = desiredY;
             else {
-                const perpX = -this.dy * speed, perpY = this.dx * speed;
+                let perpX = -this.dy * speed, perpY = this.dx * speed;
+                if (perpX === 0) perpX = speed;
+                if (perpY === 0) perpY = speed;
                 if (!this.checkCollision(this.x + perpX, this.y + perpY)) { this.x += perpX; this.y += perpY; }
                 else if (!this.checkCollision(this.x - perpX, this.y - perpY)) { this.x -= perpX; this.y -= perpY; }
             }
@@ -953,7 +955,32 @@ class AuthenticTank extends Entity {
     }
     update() {
         if (state.warmup > 0) return;
-        this.x += Math.cos(this.targetAngle) * 0.8; this.y += Math.sin(this.targetAngle) * 0.8;
+
+        for (let e of enemies) {
+            if (e.type === 'electrode' && !e.marked) {
+                const dist = Math.hypot(this.x - e.x, this.y - e.y);
+                const minDist = this.radius + e.radius;
+                if (dist < minDist) {
+                    const angle = Math.atan2(this.y - e.y, this.x - e.x);
+                    const pushDist = minDist - dist + 1;
+                    this.x += Math.cos(angle) * pushDist;
+                    this.y += Math.sin(angle) * pushDist;
+                    this.clamp();
+                }
+            }
+        }
+
+        const speed = 0.8;
+        const desiredX = this.x + Math.cos(this.targetAngle) * speed;
+        const desiredY = this.y + Math.sin(this.targetAngle) * speed;
+
+        if (!this.checkCollision(desiredX, desiredY)) {
+            this.x = desiredX;
+            this.y = desiredY;
+        } else {
+            this.targetAngle += Math.PI / 2 + (Math.random() - 0.5);
+        }
+
         if (Math.random() < 0.02) this.targetAngle += (Math.random() - 0.5);
         if (this.x <= this.radius || this.x >= state.width - this.radius) this.targetAngle = Math.PI - this.targetAngle;
         if (this.y <= this.radius || this.y >= state.height - this.radius) this.targetAngle = -this.targetAngle;
@@ -1096,8 +1123,9 @@ class AuthenticHuman extends Entity {
             this.marked = true;
             state.score += state.rescueBonus;
             addFloat(this.x, this.y, `+${state.rescueBonus}`, '#0f0');
+            checkExtraLife(state.rescueBonus);
             if (state.rescueBonus < 5000) state.rescueBonus += 1000;
-            AudioSys.rescue(); checkExtraLife();
+            AudioSys.rescue();
         }
     }
     draw() {
@@ -1140,9 +1168,9 @@ function addFloat(x,y,text,col) {
     el.style.color=col; ui.layer.appendChild(el);
     setTimeout(()=>el.remove(),1000);
 }
-function checkExtraLife() {
+function checkExtraLife(increment) {
     const every=25000;
-    const current=Math.floor(state.score/every), prev=Math.floor((state.score-100)/every);
+    const current=Math.floor(state.score/every), prev=Math.floor((state.score-increment)/every);
     if(current>prev) {
         state.lives++; AudioSys.extraLife();
         addFloat(state.width/2,state.height/2,'EXTRA LIFE','#ff0');
@@ -1283,7 +1311,8 @@ function update() {
                         else {
                             b.marked = true;
                             if(e.hit && e.hit(b)) {
-                                state.score += (e.score || 100); addFloat(e.x, e.y, (e.score || 100).toString(), '#fff'); checkExtraLife();
+                                const pts = e.score || 100;
+                                state.score += pts; addFloat(e.x, e.y, pts.toString(), '#fff'); checkExtraLife(pts);
                             }
                         }
                     }
@@ -1296,6 +1325,7 @@ function update() {
                             eb.marked = true;
                             state.score += 25;
                             addFloat(eb.x, eb.y, '25', '#fa4');
+                            checkExtraLife(25);
                             explode(eb.x, eb.y, '#fa4');
                             AudioSys.playNoise(0.1, 0.1);
                         }
