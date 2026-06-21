@@ -214,7 +214,7 @@ function getWaveConfig(waveNum) {
     if (waveNum % 4 === 0) {
         let scaling = Math.floor(waveNum / 4);
         return {
-            Grunt: 0, Hulk: 0, Brain: 0, Tank: 8 + (scaling * 2),
+            Grunt: 0, Hulk: 4 + scaling, Brain: 0, Tank: 8 + (scaling * 2),
             Daddy: 2, Mommy: 2, Mikey: 2, Electrode: 8 + (scaling * 2)
         };
     }
@@ -400,11 +400,12 @@ class Particle {
     draw() { ctx.globalAlpha=this.life; ctx.fillStyle=this.color; ctx.fillRect(this.x-2,this.y-2,4,4); ctx.globalAlpha=1; }
 }
 class Bullet extends Entity {
-    constructor(x,y,dx,dy,isEnemy=false) {
+    constructor(x,y,dx,dy,isEnemy=false, shooter=null) {
         super(x,y,3,isEnemy?'#f0f':'#ff0');
         this.dx=dx; this.dy=dy; this.speed=isEnemy?3:10; this.isEnemy=isEnemy;
         this.isBounceBomb = false;
         this.life = 300;
+        this.shooter = shooter;
     }
     update() {
         this.x += this.dx * this.speed;
@@ -420,15 +421,6 @@ class Bullet extends Entity {
                 this.dy *= -1; this.y = Math.max(this.radius, Math.min(state.height - this.radius, this.y));
             }
         } else {
-            for (let e of enemies) {
-                if (e.type === 'electrode' && !e.marked) {
-                    if (this.dist(e) < e.radius + 3) {
-                        this.marked = true;
-                        for(let i=0; i<3; i++) particles.push(new Particle(this.x, this.y, '#ff0', 2));
-                        return;
-                    }
-                }
-            }
             if(this.x<0 || this.x>state.width || this.y<0 || this.y>state.height) this.marked=true;
         }
 
@@ -514,7 +506,7 @@ class AuthenticPlayer extends Entity {
             this.aimX = sx/len;
             this.aimY = sy/len;
             if (this.cooldown <= 0) {
-                bullets.push(new Bullet(this.x, this.y, this.aimX, this.aimY, false));
+                bullets.push(new Bullet(this.x, this.y, this.aimX, this.aimY, false, this));
                 this.cooldown = 7;
                 AudioSys.shoot();
             }
@@ -849,7 +841,7 @@ class AuthenticBrain extends Entity {
             this.shootTimer = 100 + Math.random() * 40;
             const dx = player.x - this.x, dy = player.y - this.y, dist = Math.hypot(dx, dy);
             if (dist > 0 && dist < 300) {
-                const b = new Bullet(this.x, this.y, dx/dist, dy/dist, true);
+                const b = new Bullet(this.x, this.y, dx/dist, dy/dist, true, this);
                 b.speed = 3; bullets.push(b); AudioSys.playTone(300, 'sawtooth', 0.3, 0.1);
             }
         }
@@ -907,8 +899,55 @@ class AuthenticProg extends Entity {
     }
     update() {
         if (state.warmup > 0) return;
-        const dx = player.x - this.x, dy = player.y - this.y, dist = Math.hypot(dx, dy);
-        if (dist > 0) { this.x += (dx/dist) * 1.8; this.y += (dy/dist) * 1.8; }
+
+        let dx = player.x - this.x, dy = player.y - this.y;
+        let dist = Math.hypot(dx, dy);
+        let dirX = 0, dirY = 0;
+        if (dist > 0) { dirX = dx / dist; dirY = dy / dist; }
+
+        let avoidX = 0, avoidY = 0;
+        // Avoid other enemies to find a path around them
+        for (let e of enemies) {
+            if (e === this || e.marked) continue;
+            let edx = this.x - e.x, edy = this.y - e.y;
+            let edist = Math.hypot(edx, edy);
+            let minDist = this.radius + e.radius + 2; // Buffer to prevent overlapping
+
+            if (edist === 0) {
+                // If perfectly overlapping, apply random jitter
+                avoidX += (Math.random() - 0.5);
+                avoidY += (Math.random() - 0.5);
+            } else if (edist < minDist) {
+                // Repulsive push away from the obstacle
+                let push = (minDist - edist) * 0.5;
+                avoidX += (edx / edist) * push;
+                avoidY += (edy / edist) * push;
+
+                // Tangent force to slide smoothly around the obstacle
+                let t1x = -edy / edist, t1y = edx / edist;
+                let t2x = edy / edist, t2y = -edx / edist;
+
+                // Choose the tangent direction that leads closer to the player's vector
+                if ((t1x * dirX + t1y * dirY) > (t2x * dirX + t2y * dirY)) {
+                    avoidX += t1x * push * 0.8;
+                    avoidY += t1y * push * 0.8;
+                } else {
+                    avoidX += t2x * push * 0.8;
+                    avoidY += t2y * push * 0.8;
+                }
+            }
+        }
+
+        let moveX = dirX * 1.8 + avoidX;
+        let moveY = dirY * 1.8 + avoidY;
+        let moveDist = Math.hypot(moveX, moveY);
+
+        // Normalize and cap speed to standard Prog speed
+        if (moveDist > 0) {
+            this.x += (moveX / moveDist) * 1.8;
+            this.y += (moveY / moveDist) * 1.8;
+        }
+
         this.frameTimer++; this.eyePulse += 0.3; this.huePhase += 0.06;
         if (state.frames % 3 === 0) {
             const c = hsl((this.huePhase + Math.random()*0.2 - 0.1) % 1, 1, 0.65);
@@ -1003,7 +1042,7 @@ class AuthenticTank extends Entity {
             if (activeBombs < 8) {
                 const dx = player.x - this.x, dy = player.y - this.y, dist = Math.hypot(dx, dy);
                 if (dist > 0) {
-                    let b = new Bullet(this.x, this.y, dx/dist, dy/dist, true);
+                    let b = new Bullet(this.x, this.y, dx/dist, dy/dist, true, this);
                     b.isBounceBomb = true;
                     b.speed = 2.5;
                     b.radius = 6;
@@ -1303,11 +1342,24 @@ function update() {
         bullets.forEach(b => {
             if(b.isEnemy) {
                 if(player.dist(b) < player.radius + b.radius && player.invuln <= 0) { b.marked = true; killPlayer(); }
+
+                if (!b.marked) {
+                    enemies.forEach(e => {
+                        if(e.marked || e === b.shooter || b.marked) return;
+                        if(b.dist(e) < e.radius + b.radius) {
+                            b.marked = true;
+                            for(let i=0; i<3; i++) particles.push(new Particle(b.x, b.y, b.color, 2));
+                        }
+                    });
+                }
             } else {
                 enemies.forEach(e => {
-                    if(e.marked) return;
+                    if(e.marked || b.marked) return;
                     if(b.dist(e) < e.radius + b.radius) {
-                        if(e.type === 'electrode') { b.marked = true; }
+                        if(e.type === 'electrode') {
+                            b.marked = true;
+                            for(let i=0; i<3; i++) particles.push(new Particle(b.x, b.y, '#ff0', 2));
+                        }
                         else {
                             b.marked = true;
                             if(e.hit && e.hit(b)) {
