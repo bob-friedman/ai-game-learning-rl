@@ -205,6 +205,50 @@ Requirements: Google Colab account. Gemini API key (recommended) or T4 GPU runti
 > The `GridCombat_Autoresearch.ipynb` file may not be displayed correctly by the GitHub Markdown viewer. For an accurate view of the notebook's content, please use the **RAW** mode or open it directly in Google Colab.
 
 ___
+## Deep Space Breach
+
+![Deep Space Breach Icon](docs/images/icon_deepspacebreach.png)
+
+Deep Space Breach is a tactical Sci-Fi Close Quarters Battle (CQB) engine inspired by the intense, lethal gunplay of games like X-Com and XFire. Set within the cramped, hazardous corridors of a deep-space vessel, players command a squad of Marines tasked with eliminating alien signatures. The game emphasizes spatial awareness, the "fatal funnel" of airlocks, and the critical importance of hard cover.
+
+### Gameplay
+
+The objective is to eliminate all alien threats while preserving your squad. Weapons in Deep Space Breach are extremely lethal; unlike other tactical games, a unit's combat effectiveness does not decrease as it loses health. A wounded soldier shoots just as hard as a healthy one, making every engagement high-stakes.
+
+**Combat Mechanics:**
+- **Line of Sight (LoS):** Units can only attack targets they can see. Certain terrain like Bulkheads and closed Airlocks block vision.
+- **Hard Cover:** Positioning units behind consoles or within airlocks significantly reduces incoming damage.
+- **Lethal Gunplay:** Damage is calculated as `Math.ceil(Base_Damage × Cover_Modifier)`. Standing in the open (Deck) is extremely dangerous.
+
+### Environment & Terrain
+
+| Char | Name | Cover Mod | Move Cost | Blocks LoS? | Notes |
+| :---: | :--- | :---: | :---: | :---: | :--- |
+| **.** | Deck | 1.0x | 1 | No | Extremely dangerous open ground. |
+| **X** | Console | 0.6x | 2 | No | 40% damage reduction. Optimal firing position. |
+| **+** | Airlock | 0.8x | 1 | **Yes** | 20% damage reduction. Blocks vision until occupied. |
+| **#** | Bulkhead | - | Blocked | **Yes** | Impassable ship walls. |
+
+### Unit Rosters
+
+**Marines**
+| Char | Class | HP | Move | Range | Base Dmg | Role |
+| :---: | :--- | :---: | :---: | :---: | :---: | :--- |
+| **M** | Assault | 12 | 4 | 4 | 6 | Versatile pulse rifle specialist. |
+| **H** | Heavy | 16 | 2 | 6 | 9 | Plasma cannon; slow but devastating. |
+| **D** | Drone | 8 | 6 | 2 | 4 | Fast scout and flanking unit. |
+
+**Alien Threats**
+| Char | Class | HP | Move | Range | Base Dmg | Role |
+| :---: | :--- | :---: | :---: | :---: | :---: | :--- |
+| **S** | Stalker | 10 | 5 | 3 | 7 | Fast skirmisher; uses hit-and-run tactics. |
+| **B** | Brute | 22 | 3 | 2 | 10 | Tank unit; lethal at close range. |
+
+### Screenshot
+
+![Deep Space Breach Screenshot](docs/images/screenshot_1_deepspacebreach.png)
+
+___
 ## Othello
 
 ![Othello Icon](docs/images/icon_othello.png)
@@ -319,6 +363,19 @@ The game logic for Grid Combat is contained in `grid-combat/game.js`. The follow
 -   **`evaluatePosition()`**: Function used to calculate the current strategic balance between teams.
 -   **`exportHistoryJSON()`**: Generates and downloads a JSON file containing the full game history and associated metadata.
 
+### Deep Space Breach
+
+The game logic for Deep Space Breach is contained in `deep-space-breach/game.js`. The state can be extracted and interacted with via the following:
+
+- **`map`**: A 2D array of objects representing the ship's layout.
+- **`units`**: An array of active unit objects on the map.
+- **`turn`**: Integer (0: Marines, 1: Aliens) indicating the active team.
+- **`TEAMS`, `UNITS`, `TERRAIN`**: Constant objects defining stats and properties for teams, units, and terrain types.
+- **`hasLoS(x0, y0, x1, y1)`**: Function to determine if there is a clear line of sight between two points.
+- **`getMovableTiles(unit)`**: Returns an array of valid movement coordinates for a given unit.
+- **`getAttackTargets(unit)`**: Returns an array of valid target coordinates for a given unit.
+- **`resolveCombat(attacker, defender)`**: Calculates and applies damage between two units.
+
 ### Othello
 
 The Othello game logic is contained within the `othello/index.html` file. The game state is accessible through several global variables and functions:
@@ -350,4 +407,5 @@ The development of the software and code benefited significantly from discussion
 -   **Gemini 2.5 Pro** (Google) — primary development of the game collection and RL data retrieval interfaces.
 -   **Gemini 3.1 Pro** (Google) — transition to Google Flash Lite in the Autoresearch workflow script and several bug fixes.
 -   **Claude Sonnet** (Anthropic) — design and implementation of the Grid Combat Autoresearch system, including the two-loop architecture, experiment harness, evaluator, git persistence strategy, and formal documentation of findings.
+-   **Gemini (Deep Space Breach)** — development of the Sci-Fi tactical variant, including the BFS corridor pathfinding and lethal gunplay mechanics.
 -   **Othello Licensing**: Please note that the Othello game is not licensed, as it originated from code generated by Large Language Models and incorporates parts of other works.
