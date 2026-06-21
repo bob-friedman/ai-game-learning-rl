@@ -207,9 +207,10 @@ Requirements: Google Colab account. Gemini API key (recommended) or T4 GPU runti
 ___
 ## Deep Space Breach
 
-![Deep Space Breach Icon](docs/images/icon_deepspacebreach.png)
+Deep Space Breach is an early demo of a tactical Sci-Fi Close Quarters Battle (CQB) engine inspired by the intense, lethal gunplay of games like X-Com. Set within the cramped, hazardous corridors of a deep-space vessel, players command a squad of Marines tasked with eliminating alien signatures. The game emphasizes spatial awareness, the "fatal funnel" of airlocks, and the importance of hard cover.
 
-Deep Space Breach is a tactical Sci-Fi Close Quarters Battle (CQB) engine inspired by the intense, lethal gunplay of games like X-Com and XFire. Set within the cramped, hazardous corridors of a deep-space vessel, players command a squad of Marines tasked with eliminating alien signatures. The game emphasizes spatial awareness, the "fatal funnel" of airlocks, and the critical importance of hard cover.
+> [!NOTE]
+> The design and code is based on Grid Combat with many adaptations for the Sci-Fi setting. It requires further testing but this version serves as a preview of its gameplay and user interface.
 
 ### Gameplay
 
@@ -218,31 +219,31 @@ The objective is to eliminate all alien threats while preserving your squad. Wea
 **Combat Mechanics:**
 - **Line of Sight (LoS):** Units can only attack targets they can see. Certain terrain like Bulkheads and closed Airlocks block vision.
 - **Hard Cover:** Positioning units behind consoles or within airlocks significantly reduces incoming damage.
-- **Lethal Gunplay:** Damage is calculated as `Math.ceil(Base_Damage × Cover_Modifier)`. Standing in the open (Deck) is extremely dangerous.
+- **Lethal Gunplay:** Damage is calculated as `Math.ceil(Base_Damage × Cover_Modifier)`. Standing in the open (Deck) is dangerous.
 
 ### Environment & Terrain
 
 | Char | Name | Cover Mod | Move Cost | Blocks LoS? | Notes |
 | :---: | :--- | :---: | :---: | :---: | :--- |
-| **.** | Deck | 1.0x | 1 | No | Extremely dangerous open ground. |
-| **X** | Console | 0.6x | 2 | No | 40% damage reduction. Optimal firing position. |
-| **+** | Airlock | 0.8x | 1 | **Yes** | 20% damage reduction. Blocks vision until occupied. |
-| **#** | Bulkhead | - | Blocked | **Yes** | Impassable ship walls. |
+| **.** | Deck | 1.0x | 1 | No | Very dangerous open ground |
+| **X** | Console | 0.6x | 2 | No | 40% damage reduction. Optimal firing position |
+| **+** | Airlock | 0.8x | 1 | **Yes** | 20% damage reduction. Blocks vision until occupied |
+| **#** | Bulkhead | - | Blocked | **Yes** | Impassable ship walls |
 
 ### Unit Rosters
 
 **Marines**
 | Char | Class | HP | Move | Range | Base Dmg | Role |
 | :---: | :--- | :---: | :---: | :---: | :---: | :--- |
-| **M** | Assault | 12 | 4 | 4 | 6 | Versatile pulse rifle specialist. |
-| **H** | Heavy | 16 | 2 | 6 | 9 | Plasma cannon; slow but devastating. |
-| **D** | Drone | 8 | 6 | 2 | 4 | Fast scout and flanking unit. |
+| **M** | Assault | 12 | 4 | 4 | 6 | Versatile pulse rifle specialist |
+| **H** | Heavy | 16 | 2 | 6 | 9 | Plasma cannon; slow but devastating |
+| **D** | Drone | 8 | 6 | 2 | 4 | Fast scout and flanking unit |
 
 **Alien Threats**
 | Char | Class | HP | Move | Range | Base Dmg | Role |
 | :---: | :--- | :---: | :---: | :---: | :---: | :--- |
-| **S** | Stalker | 10 | 5 | 3 | 7 | Fast skirmisher; uses hit-and-run tactics. |
-| **B** | Brute | 22 | 3 | 2 | 10 | Tank unit; lethal at close range. |
+| **S** | Stalker | 10 | 5 | 3 | 7 | Fast skirmisher; uses hit-and-run tactics |
+| **B** | Brute | 22 | 3 | 2 | 10 | Tank unit; lethal at close range |
 
 ### Screenshot
 
