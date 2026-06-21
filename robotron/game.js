@@ -620,8 +620,9 @@ class AuthenticGrunt extends Entity {
         this.moveCount = (this.moveCount + 1) % 40;
         this.frameTimer++;
 
+        // Soft push away from ALL other dynamic enemies (Swarm logic + avoiding Hulks/Tanks)
         for (let other of enemies) {
-            if (other === this || other.type !== 'grunt' || other.marked) continue;
+            if (other === this || other.marked) continue;
             const sx = this.x - other.x, sy = this.y - other.y, sd = Math.hypot(sx, sy);
             const minSep = this.radius + other.radius - 2;
             if (sd < minSep) {
@@ -765,8 +766,10 @@ class AuthenticBrain extends Entity {
     }
     update() {
         if (state.warmup > 0) return;
+
+        // Physical repulsion from ALL enemies (prevents ghosting through Hulks/Tanks/Grunts)
         enemies.forEach(e => {
-            if (e.type === 'electrode' && !e.marked) {
+            if (e !== this && !e.marked) {
                 const dist = this.dist(e), minD = this.radius + e.radius;
                 if (dist < minD && dist > 0) {
                     const angle = Math.atan2(this.y - e.y, this.x - e.x), pushDist = minD - dist + 1;
@@ -995,11 +998,12 @@ class AuthenticTank extends Entity {
     update() {
         if (state.warmup > 0) return;
 
+        // Physical repulsion from ALL enemies
         for (let e of enemies) {
-            if (e.type === 'electrode' && !e.marked) {
+            if (e !== this && !e.marked) {
                 const dist = Math.hypot(this.x - e.x, this.y - e.y);
                 const minDist = this.radius + e.radius;
-                if (dist < minDist) {
+                if (dist < minDist && dist > 0) {
                     const angle = Math.atan2(this.y - e.y, this.x - e.x);
                     const pushDist = minDist - dist + 1;
                     this.x += Math.cos(angle) * pushDist;
@@ -1372,7 +1376,7 @@ function update() {
                 // Player bullets destroying Bounce Bombs
                 bullets.forEach(eb => {
                     if (eb.isEnemy && eb.isBounceBomb && !eb.marked && !b.marked) {
-                        if (b.dist(eb) < eb.radius + b.radius) {
+                        if (b.dist(eb) < eb.radius + b.radius + 10) {
                             b.marked = true;
                             eb.marked = true;
                             state.score += 25;
