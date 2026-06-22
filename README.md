@@ -205,12 +205,15 @@ Requirements: Google Colab account. Gemini API key (recommended) or T4 GPU runti
 > The `GridCombat_Autoresearch.ipynb` file may not be displayed correctly by the GitHub Markdown viewer. For an accurate view of the notebook's content, please use the **RAW** mode or open it directly in Google Colab.
 
 ___
-## Deep Space Breach
+## Deep Space Breach (v5.6)
 
-Deep Space Breach is an early demo of a tactical Sci-Fi Close Quarters Battle (CQB) engine inspired by the intense, lethal gunplay of games like X-Com. Set within the cramped, hazardous corridors of a deep-space vessel, players command a squad of Marines tasked with eliminating alien signatures. The game emphasizes spatial awareness, the "fatal funnel" of airlocks, and the importance of hard cover.
+Deep Space Breach is a tactical Sci-Fi Close Quarters Battle (CQB) engine inspired by the intense, lethal gunplay of games like X-Com. Set within the cramped, hazardous corridors of a deep-space vessel, players command a squad of Marines tasked with eliminating alien signatures. The game emphasizes spatial awareness, the "fatal funnel" of airlocks, and the importance of hard cover.
 
-> [!NOTE]
-> The design and code is based on Grid Combat with many adaptations for the Sci-Fi setting. It requires further testing but this version serves as a preview of its gameplay and user interface.
+### Recent Updates (v5.6)
+
+- **Reflex Fire System**: Units now feature automated counterattacks. If a unit survives an engagement and the attacker is within range and line of sight, they will immediately return fire.
+- **Dynamic Scenarios**: Multiple mission layouts including *The Killbox*, *The Maze*, and *The Perimeter* are now selectable.
+- **Combat Visuals**: Enhanced floating text system for damage and reflex indicators, with improved synchronization between combat logic and rendering.
 
 ### Gameplay
 
@@ -220,6 +223,7 @@ The objective is to eliminate all alien threats while preserving your squad. Wea
 - **Line of Sight (LoS):** Units can only attack targets they can see. Certain terrain like Bulkheads and closed Airlocks block vision.
 - **Hard Cover:** Positioning units behind consoles or within airlocks significantly reduces incoming damage.
 - **Lethal Gunplay:** Damage is calculated as `Math.ceil(Base_Damage × Cover_Modifier)`. Standing in the open (Deck) is dangerous.
+- **Reflex Fire:** Units automatically counterattack when hit, provided the enemy is within their firing arc.
 
 ### Environment & Terrain
 
@@ -371,11 +375,11 @@ The game logic for Deep Space Breach is contained in `deep-space-breach/game.js`
 - **`map`**: A 2D array of objects representing the ship's layout.
 - **`units`**: An array of active unit objects on the map.
 - **`turn`**: Integer (0: Marines, 1: Aliens) indicating the active team.
-- **`TEAMS`, `UNITS`, `TERRAIN`**: Constant objects defining stats and properties for teams, units, and terrain types.
+- **`UNITS`, `TERRAIN`, `LEVELS`**: Constant objects defining stats, properties, and map configurations.
 - **`hasLoS(x0, y0, x1, y1)`**: Function to determine if there is a clear line of sight between two points.
 - **`getMovableTiles(unit)`**: Returns an array of valid movement coordinates for a given unit.
 - **`getAttackTargets(unit)`**: Returns an array of valid target coordinates for a given unit.
-- **`resolveCombat(attacker, defender)`**: Calculates and applies damage between two units.
+- **`performCombat(attacker, defender)`**: Handles the combat exchange, including reflex fire and visual effects.
 
 ### Othello
 

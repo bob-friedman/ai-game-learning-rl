@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <!--
-GRIDWARS: DEEP SPACE BREACH v2.2
-=================================================
-Sci-Fi Close Quarters Battle (CQB) Tactical Engine.
-Features: Line of Sight, Hard Cover, Corridor Pathfinding AI, full Documentation,
-Lethal Gunplay (No HP-Damage Scaling), and Classic ASCII Terminal aesthetics.
+GRIDWARS: DEEP SPACE BREACH v5.6
+Fixes: Reflex Fire timing, Floating Text visibility, and combat sync
 -->
 <html lang="en">
 <head>
@@ -15,57 +12,55 @@ Lethal Gunplay (No HP-Damage Scaling), and Classic ASCII Terminal aesthetics.
 </head>
 <body>
 <div id="game-container">
-    <div id="board-container">
-        <div id="board"></div>
-    </div>
+    <div id="board-container"><div id="board"></div></div>
     <div id="ui">
         <div style="font-size: 20px; font-weight: bold; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #004466; padding-bottom: 10px; letter-spacing: 2px;">
             TURN <span id="turn">1</span> | <span id="team" class="marine">MARINES</span>
         </div>
         <div id="info-panel">
-            <div class="info-row"><span class="info-label">Terrain:</span><span id="info-terrain">-</span></div>
-            <div class="info-row"><span class="info-label">Cover:</span><span id="info-defense">-</span></div>
-            <div class="info-row"><span class="info-label">Unit:</span><span id="info-unit">-</span></div>
+            <div class="info-row"><span class="info-label">Terrain: </span><span id="info-terrain">-</span></div>
+            <div class="info-row"><span class="info-label">Cover: </span><span id="info-defense">-</span></div>
+            <div class="info-row"><span class="info-label">Unit: </span><span id="info-unit">-</span></div>
         </div>
         <div id="log"></div>
-        <button onclick="document.getElementById('manual-modal').style.display='flex'">Tactical Manual</button>
-        <button onclick="endTurn()" id="end-btn">End Turn</button>
+        <div style="display:flex; gap:10px;">
+	    <select id="levelSelect" onchange="resetGame()">
+	         <option value="classic">Original Breach</option>
+	         <option value="killbox">The Killbox</option>
+	         <option value="maze">The Maze</option>
+	         <option value="perimeter">The Perimeter</option>
+            </select>
+            <button style="flex:1;" onclick="document.getElementById('manual-modal').style.display='flex'">Manual</button>
+            <button style="flex:1;" onclick="resetGame()" id="restart-btn">Restart</button>
+        </div>
+        <button onclick="endTurn()" id="end-btn" style="margin-top: 10px; width: 100%;">End Turn</button>
     </div>
 </div>
 
-<!-- Documentation Modal -->
 <div id="manual-modal">
     <div id="manual-content">
         <button class="close-btn" onclick="document.getElementById('manual-modal').style.display='none'">CLOSE</button>
         <h2>DEEP SPACE BREACH - TACTICAL MANUAL</h2>
+
+        <h3>I. MISSION LORE & DOCTRINE</h3>
         <p style="color: #aaaacc; line-height: 1.5;">
-            Welcome to CQB (Close Quarters Battle). Weapons are highly lethal; a wounded soldier shoots just as hard as a healthy one.
-            Always utilize Hard Cover and manage your Line of Sight (LoS).
-            <br><br><strong>Combat Formula:</strong> <code>Damage = Math.ceil( Base_Damage × Cover_Modifier )</code>
+            Following a distress beacon, your squad has boarded the derelict freighter <em>USG Ishimura-7</em>. The vessel is infested. Due to the tight architecture, heavy vehicle support is impossible.
         </p>
 
-        <h3>ENVIRONMENT & TERRAIN</h3>
-        <table>
-            <tr><th>Char</th><th>Name</th><th>Cover Mod</th><th>Move Cost</th><th>Blocks LoS?</th><th>Notes</th></tr>
-            <tr><td style="text-align:center; font-weight:bold;">.</td><td>Deck</td><td>1.0x (None)</td><td>1</td><td>No</td><td>Standing here is extremely dangerous.</td></tr>
-            <tr><td style="text-align:center; font-weight:bold; color:#55aacc;">X</td><td>Console</td><td>0.6x (40%)</td><td>2</td><td>No</td><td>Reduces incoming damage. Best firing position.</td></tr>
-            <tr><td style="text-align:center; font-weight:bold; color:#00aaff;">+</td><td>Airlock</td><td>0.8x (20%)</td><td>1</td><td><strong>YES</strong></td><td>The "Fatal Funnel". Blocks vision until stepped into.</td></tr>
-            <tr><td style="text-align:center; font-weight:bold; color:#6688aa;">#</td><td>Bulkhead</td><td>-</td><td>Blocked</td><td><strong>YES</strong></td><td>Impassable ship walls.</td></tr>
-        </table>
+        <h3>II. COMBAT & REFLEX FIRE</h3>
+        <p style="color: #aaaacc; line-height: 1.5; background: #001122; padding: 10px; border-left: 3px solid #00ffcc;">
+            <strong>Reflex Fire System:</strong> If a unit survives an attack, they will immediately return fire (counterattack) provided the attacker is within their <strong>Range</strong> and <strong>Line of Sight</strong>.
+            <br><br>
+            <strong>Tactical Note:</strong> Trading shots with a Brute (HP: 22) or Heavy (HP: 16) is lethal. Only engage high-HP targets from outside their weapon range or while they are behind weak cover.
+        </p>
 
-        <h3>MARINE ROSTER</h3>
+        <h3>III. TERRAIN DATA</h3>
         <table>
-            <tr><th>Char</th><th>Class</th><th>HP</th><th>Move</th><th>Range</th><th>Base Dmg</th><th>Role</th></tr>
-            <tr><td style="text-align:center; color:#00ffcc; font-weight:bold;">M</td><td>Assault</td><td>12</td><td>4</td><td>4</td><td>6</td><td>Standard pulse rifle. Versatile.</td></tr>
-            <tr><td style="text-align:center; color:#00ffcc; font-weight:bold;">H</td><td>Heavy</td><td>16</td><td>2</td><td>6</td><td>9</td><td>Plasma cannon. Slow but devastating.</td></tr>
-            <tr><td style="text-align:center; color:#00ffcc; font-weight:bold;">D</td><td>Drone</td><td>8</td><td>6</td><td>2</td><td>4</td><td>Fast scout. Flanking unit.</td></tr>
-        </table>
-
-        <h3>ALIEN THREATS</h3>
-        <table>
-            <tr><th>Char</th><th>Class</th><th>HP</th><th>Move</th><th>Range</th><th>Base Dmg</th><th>Role</th></tr>
-            <tr><td style="text-align:center; color:#ff3366; font-weight:bold;">S</td><td>Stalker</td><td>10</td><td>5</td><td>3</td><td>7</td><td>Fast skirmisher. Uses hit-and-run tactics.</td></tr>
-            <tr><td style="text-align:center; color:#ff3366; font-weight:bold;">B</td><td>Brute</td><td>22</td><td>3</td><td>2</td><td>10</td><td>Tank unit. Lethal at close range.</td></tr>
+            <tr><th>Char</th><th>Name</th><th>Cover Mod</th><th>Move Cost</th><th>Blocks LoS?</th></tr>
+            <tr><td style="font-weight:bold; text-align:center;">.</td><td>Deck</td><td>1.0x (None)</td><td>1</td><td>No</td></tr>
+            <tr><td style="font-weight:bold; color:#55aacc; text-align:center;">X</td><td>Console</td><td>0.6x (40% Reduc)</td><td>2</td><td>No</td></tr>
+            <tr><td style="font-weight:bold; color:#00aaff; text-align:center;">+</td><td>Airlock</td><td>0.8x (20% Reduc)</td><td>1</td><td><strong>YES</strong></td></tr>
+            <tr><td style="font-weight:bold; color:#6688aa; text-align:center;">#</td><td>Bulkhead</td><td>-</td><td>Blocked</td><td><strong>YES</strong></td></tr>
         </table>
     </div>
 </div>
