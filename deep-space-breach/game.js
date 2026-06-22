@@ -1,106 +1,109 @@
 // ==================== CONFIGURATION ====================
-const TEAMS = ['Marines', 'Aliens'];
-
 const UNITS = {
     assault: { name: 'Assault', char: 'M', hp: 12, move: 4, range: 4, dmg: 6 },
     heavy:   { name: 'Heavy',   char: 'H', hp: 16, move: 2, range: 6, dmg: 9 },
     drone:   { name: 'Drone',   char: 'D', hp: 8,  move: 6, range: 2, dmg: 4 },
-
-    stalker: { name: 'Stalker', char: 'S', hp: 10, move: 5, range: 3, dmg: 7 }, // Changed from Hunter (X) to Stalker (S)
+    stalker: { name: 'Stalker', char: 'S', hp: 10, move: 5, range: 3, dmg: 7 },
     brute:   { name: 'Brute',   char: 'B', hp: 22, move: 3, range: 2, dmg: 10 }
 };
-
 const TERRAIN = {
-    floor: { name: 'Deck',     char: '.', cover: 1.0, move: 1, blocksLoS: false },
-    wall:  { name: 'Bulkhead', char: '#', cover: 0.0, move: 255, blocksLoS: true },
-    cover: { name: 'Console',  char: 'X', cover: 0.6, move: 2, blocksLoS: false }, // Changed to X, adjusted to 40% reduction
-    door:  { name: 'Airlock',  char: '+', cover: 0.8, move: 1, blocksLoS: true }
+    floor: { name: 'Deck',     char: '.', cover: 1.0, move: 1, blocks: false },
+    wall:  { name: 'Bulkhead', char: '#', cover: 0.0, move: 99, blocks: true },
+    cover: { name: 'Console',  char: 'X', cover: 0.6, move: 2, blocks: false },
+    door:  { name: 'Airlock',  char: '+', cover: 0.8, move: 1, blocks: true }
+};
+
+const boardWidth = 20, boardHeight = 12;
+
+const LEVELS = {
+    classic: `####################\n#.......#..........#\n#..XX...+...XXXX...#\n#.......#..........#\n####+####..........#\n#.......#...XXXX...#\n#..XX...+..........#\n#.......############\n#.......+..........#\n#..XXX..#...XXXX...#\n#.......#..........#\n####################`,
+    killbox: `####################\n#..................#\n#..X............X..#\n#..................#\n#.......XXXX.......#\n#.......XXXX.......#\n#..................#\n#..X............X..#\n#..................#\n#..................#\n#..................#\n####################`,
+    maze: `####################\n#.#....#.......#...#\n#.#.##.###.###.#.#.#\n#...#..#...#...#.#.#\n#####.##.###.###.#.#\n#.....#..#.........#\n#.###.####.#########\n#.#...#....#.......#\n#.#####.##.#######.#\n#.......#..........#\n#..................#\n####################`,
+    perimeter: `####################\n#........##........#\n#........##........#\n####+####....####+##\n#..................#\n#..X............X..#\n#.......##.......#.#\n#.......##.......#.#\n####+####....####+##\n#........##........#\n#........##........#\n####################`
 };
 
 let map = [], units = [], turn = 0, selectedUnit = null;
 let movableTiles = [], attackableTiles = [];
 let aiThinking = false, gameOver = false;
 
-// ==================== MAP GENERATION ====================
-const MAP_STRING = `
-####################
-#.......#..........#
-#..XX...+...XXXX...#
-#.......#..........#
-####+####..........#
-#.......#...XXXX...#
-#..XX...+..........#
-#.......############
-#.......+..........#
-#..XXX..#...XXXX...#
-#.......#..........#
-####################`.trim();
+// ==================== ENGINE ====================
 
-const boardWidth = 20;
-const boardHeight = 12;
-
-function initGame() {
-    const lines = MAP_STRING.split('\n');
+function initGame(mapString) {
+    const lines = mapString.split('\n');
     const charMap = { '.': 'floor', '#': 'wall', 'X': 'cover', '+': 'door' };
-
-    map = lines.map((line, y) => line.split('').map((char, x) => ({ type: charMap[char] || 'floor', x, y })));
-
-    units = [
-        { id: 1, type: 'assault', x: 1, y: 1, team: 0, hp: 12, maxHp: 12, moved: false, attacked: false },
-        { id: 2, type: 'assault', x: 2, y: 3, team: 0, hp: 12, maxHp: 12, moved: false, attacked: false },
-        { id: 3, type: 'heavy',   x: 1, y: 2, team: 0, hp: 16, maxHp: 16, moved: false, attacked: false },
-        { id: 4, type: 'drone',   x: 3, y: 1, team: 0, hp: 8,  maxHp: 8,  moved: false, attacked: false },
-
-        { id: 5, type: 'stalker', x: 18, y: 2, team: 1, hp: 10, maxHp: 10, moved: false, attacked: false },
-        { id: 6, type: 'stalker', x: 15, y: 4, team: 1, hp: 10, maxHp: 10, moved: false, attacked: false },
-        { id: 7, type: 'stalker', x: 18, y: 9, team: 1, hp: 10, maxHp: 10, moved: false, attacked: false },
-        { id: 8, type: 'brute',   x: 12, y: 8, team: 1, hp: 22, maxHp: 22, moved: false, attacked: false }
-    ];
-
+    map = [];
+    for (let y = 0; y < boardHeight; y++) {
+        let rowStr = (lines[y] || "").trim().padEnd(boardWidth, "#");
+        let row = [];
+        for (let x = 0; x < boardWidth; x++) {
+            row.push({ type: charMap[rowStr[x]] || 'wall', x, y });
+        }
+        map.push(row);
+    }
+    units = [];
+    const marineSpawns = findSmartSpawns(0);
+    const alienSpawns = findSmartSpawns(1);
+    const mT = ['assault','heavy','assault','drone'];
+    const aT = ['stalker','stalker','stalker','brute'];
+    mT.forEach((type, i) => {
+        let p = marineSpawns[i] || {x:1, y:1};
+        units.push({id:i, type, x:p.x, y:p.y, team:0, hp:UNITS[type].hp, maxHp:UNITS[type].hp, moved:false, attacked:false});
+    });
+    aT.forEach((type, i) => {
+        let p = alienSpawns[i] || {x:18, y:1};
+        units.push({id:i+4, type, x:p.x, y:p.y, team:1, hp:UNITS[type].hp, maxHp:UNITS[type].hp, moved:false, attacked:false});
+    });
     render();
-    log("BREACH INITIATED. Eliminate all alien signatures. Check Tactical Manual for intel.");
+    log("SYSTEMS ONLINE. GOOD HUNTING.");
 }
 
-// ==================== LINE OF SIGHT & PATHFINDING ====================
+function findSmartSpawns(team) {
+    let found = [];
+    if (team === 0) {
+        for (let x = 0; x < 10; x++) {
+            for (let y = 0; y < boardHeight; y++) {
+                if (TERRAIN[map[y][x].type].move < 10 && !getUnitAt(x,y)) {
+                    found.push({x, y}); if (found.length >= 4) return found;
+                }
+            }
+        }
+    } else {
+        for (let x = boardWidth - 1; x >= 10; x--) {
+            for (let y = 0; y < boardHeight; y++) {
+                if (TERRAIN[map[y][x].type].move < 10 && !getUnitAt(x,y)) {
+                    found.push({x, y}); if (found.length >= 4) return found;
+                }
+            }
+        }
+    }
+    return found;
+}
+
 function hasLoS(x0, y0, x1, y1) {
     let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     let dy = Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     let err = (dx > dy ? dx : -dy) / 2, e2;
     let cx = x0, cy = y0;
-
     while (true) {
         if (cx === x1 && cy === y1) return true;
-        if ((cx !== x0 || cy !== y0) && TERRAIN[map[cy][cx].type].blocksLoS) return false;
-
+        if ((cx !== x0 || cy !== y0) && (cx !== x1 || cy !== y1) && TERRAIN[map[cy][cx].type].blocks) return false;
         e2 = err;
         if (e2 > -dx) { err -= dy; cx += sx; }
         if (e2 < dy) { err += dx; cy += sy; }
     }
 }
 
-// Global BFS to let AI navigate through corridors towards Marines
-function buildMarineDistanceMap() {
+function buildHeatmap() {
     const distMap = Array.from({ length: boardHeight }, () => new Int32Array(boardWidth).fill(999));
     const queue = [];
-
-    units.forEach(u => {
-        if (u.team === 0) {
-            queue.push({ x: u.x, y: u.y, d: 0 });
-            distMap[u.y][u.x] = 0;
-        }
-    });
-
+    units.forEach(u => { if (u.team === 0) { queue.push({ x: u.x, y: u.y, d: 0 }); distMap[u.y][u.x] = 0; } });
     while (queue.length > 0) {
         const {x, y, d} = queue.shift();
-        const neighbors = [{x: x+1, y}, {x: x-1, y}, {x, y: y+1}, {x, y: y-1}];
-
-        for (let n of neighbors) {
-            if (n.x >= 0 && n.x < boardWidth && n.y >= 0 && n.y < boardHeight) {
-                if (TERRAIN[map[n.y][n.x].type].move < 255) {
-                    if (distMap[n.y][n.x] > d + 1) {
-                        distMap[n.y][n.x] = d + 1;
-                        queue.push({ x: n.x, y: n.y, d: d + 1 });
-                    }
+        for (let [dx, dy] of [[1,0], [-1,0], [0,1], [0,-1]]) {
+            let nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < boardWidth && ny >= 0 && ny < boardHeight) {
+                if (TERRAIN[map[ny][nx].type].move < 10 && distMap[ny][nx] > d + 1) {
+                    distMap[ny][nx] = d + 1; queue.push({ x: nx, y: ny, d: d + 1 });
                 }
             }
         }
@@ -109,33 +112,18 @@ function buildMarineDistanceMap() {
 }
 
 function getMovableTiles(unit) {
-    if (unit.moved) return [];
-    const tiles = [];
-    const visited = new Set();
-    const queue = [{ x: unit.x, y: unit.y, cost: 0 }];
-    visited.add(`${unit.x},${unit.y}`);
-
-    while (queue.length > 0) {
-        const current = queue.shift();
-        const neighbors = [{ x: current.x+1, y: current.y }, { x: current.x-1, y: current.y }, { x: current.x, y: current.y+1 }, { x: current.x, y: current.y-1 }];
-
-        for (const next of neighbors) {
-            if (next.x < 0 || next.x >= boardWidth || next.y < 0 || next.y >= boardHeight) continue;
-            const key = `${next.x},${next.y}`;
-            if (visited.has(key)) continue;
-
-            const terrain = map[next.y][next.x];
-            const moveCost = TERRAIN[terrain.type].move;
-            if (moveCost >= 255) continue;
-
-            const otherUnit = getUnitAt(next.x, next.y);
-            if (otherUnit && otherUnit.team !== unit.team) continue;
-
-            const newCost = current.cost + moveCost;
-            if (newCost <= UNITS[unit.type].move) {
-                visited.add(key);
-                if (!otherUnit) tiles.push({ x: next.x, y: next.y });
-                queue.push({ x: next.x, y: next.y, cost: newCost });
+    if (unit.moved || unit.attacked) return [];
+    let tiles = [], q = [{x: unit.x, y: unit.y, cost: 0}], v = new Set([`${unit.x},${unit.y}`]);
+    while (q.length > 0) {
+        let c = q.shift();
+        for (let [dx, dy] of [[1,0], [-1,0], [0,1], [0,-1]]) {
+            let nx = c.x + dx, ny = c.y + dy;
+            if (nx < 0 || nx >= boardWidth || ny < 0 || ny >= boardHeight || v.has(`${nx},${ny}`)) continue;
+            let cost = TERRAIN[map[ny][nx].type].move;
+            if (cost > 10 || getUnitAt(nx, ny)) continue;
+            if (c.cost + cost <= UNITS[unit.type].move) {
+                v.add(`${nx},${ny}`); tiles.push({x: nx, y: ny});
+                q.push({x: nx, y: ny, cost: c.cost + cost});
             }
         }
     }
@@ -144,304 +132,197 @@ function getMovableTiles(unit) {
 
 function getAttackTargets(unit) {
     if (unit.attacked) return [];
-    const targets = [];
-    const range = UNITS[unit.type].range;
-
-    units.forEach(target => {
-        if (target.team !== unit.team) {
-            const dist = Math.abs(target.x - unit.x) + Math.abs(target.y - unit.y);
-            if (dist <= range && hasLoS(unit.x, unit.y, target.x, target.y)) {
-                targets.push({ x: target.x, y: target.y });
-            }
+    let targets = [], range = UNITS[unit.type].range;
+    units.forEach(u => {
+        if (u.team !== unit.team) {
+            let dist = Math.max(Math.abs(u.x - unit.x), Math.abs(u.y - unit.y));
+            if (dist <= range && hasLoS(unit.x, unit.y, u.x, u.y)) targets.push({x: u.x, y: u.y});
         }
     });
     return targets;
 }
 
-// ==================== COMBAT ====================
-function getUnitAt(x, y) { return units.find(u => u.x === x && u.y === y); }
+/**
+ * FIXED: Combat with awaiting rendering and text
+ */
+async function performCombat(attacker, defender) {
+    // 1. Initial Attack
+    let dmg = Math.ceil(UNITS[attacker.type].dmg * TERRAIN[map[defender.y][defender.x].type].cover);
+    defender.hp -= dmg;
+    log(`${UNITS[attacker.type].name} hits ${UNITS[defender.type].name} for ${dmg}`);
 
-function resolveCombat(attacker, defender) {
-    const atkData = UNITS[attacker.type];
-    const defTerrain = map[defender.y][defender.x];
-    const coverMod = TERRAIN[defTerrain.type].cover;
+    render(); // Update HP bar before text
+    spawnFloatingText(defender.x, defender.y, `-${dmg}`, false);
 
-    // DESIGN UPDATE: Weapons are lethal. Removed HP-scaling for damage.
-    // A unit with 1 HP hits just as hard as a unit with full HP.
-    let finalDamage = Math.ceil(atkData.dmg * coverMod);
-    if (finalDamage < 1) finalDamage = 1;
+    await new Promise(r => setTimeout(r, 600));
 
-    defender.hp -= finalDamage;
-    log(`${TEAMS[attacker.team]} ${atkData.name} blasts ${TEAMS[defender.team]} ${UNITS[defender.type].name} for ${finalDamage} dmg!`);
+    // 2. Reflex Fire check
+    if (defender.hp > 0) {
+        let dist = Math.max(Math.abs(attacker.x - defender.x), Math.abs(attacker.y - defender.y));
+        let canReflex = dist <= UNITS[defender.type].range && hasLoS(defender.x, defender.y, attacker.x, attacker.y);
 
-    if (coverMod < 1.0) log(`  -> Target was in cover (${Math.round((1-coverMod)*100)}% absorbed).`);
+        if (canReflex) {
+            let rDmg = Math.ceil(UNITS[defender.type].dmg * TERRAIN[map[attacker.y][attacker.x].type].cover);
+            attacker.hp -= rDmg;
+            log(`!!! REFLEX: ${UNITS[defender.type].name} hits back for ${rDmg}`);
 
-    if (defender.hp <= 0) {
-        log(`*** ${TEAMS[defender.team]} ${UNITS[defender.type].name} TERMINATED. ***`);
-        units = units.filter(u => u !== defender);
+            render(); // Update attacker HP bar
+            spawnFloatingText(attacker.x, attacker.y, `-${rDmg}`, true);
+
+            await new Promise(r => setTimeout(r, 600));
+        }
     }
-    return finalDamage;
+
+    // 3. Cleanup Dead
+    const initialCount = units.length;
+    units = units.filter(u => u.hp > 0);
+    if (units.length < initialCount) {
+        // Log who died
+        if (defender.hp <= 0) log(`*** ${UNITS[defender.type].name} TERMINATED ***`);
+        if (attacker.hp <= 0) log(`*** ${UNITS[attacker.type].name} TERMINATED ***`);
+    }
+
+    checkWinState();
+    render();
 }
 
-// ==================== ADVANCED CQB AI ====================
 async function runAITurn() {
-    aiThinking = true;
-    updateUI();
-
+    aiThinking = true; updateUI();
+    const heatmap = buildHeatmap();
     const aiUnits = units.filter(u => u.team === 1);
-
     for (const unit of aiUnits) {
         if (gameOver || !units.includes(unit)) continue;
-
         let targets = getAttackTargets(unit);
-        if (targets.length > 0) {
-            await executeAIAttack(unit, targets);
-            if (!unit.moved) await executeAIMove(unit);
-        } else {
-            await executeAIMove(unit);
-            targets = getAttackTargets(unit);
-            if (targets.length > 0) await executeAIAttack(unit, targets);
-        }
-        await sleep(300);
-    }
-
-    aiThinking = false;
-    endTurn();
-}
-
-async function executeAIMove(unit) {
-    const movable = getMovableTiles(unit);
-    if (movable.length === 0) return;
-
-    const marines = units.filter(u => u.team === 0);
-    if (marines.length === 0) return;
-
-    // Build a global navigation map to find marines through corridors
-    const marineDistMap = buildMarineDistanceMap();
-
-    let bestMove = null;
-    let bestScore = -9999;
-
-    movable.forEach(move => {
-        let score = 0;
-        const terrain = TERRAIN[map[move.y][move.x].type];
-
-        // 1. Advance through corridors (Pathfinding distance)
-        const distToMarines = marineDistMap[move.y][move.x];
-        score -= (distToMarines * 10);
-
-        // 2. Cover Evaluation
-        let hasLoSToEnemy = false;
-        marines.forEach(m => {
-            if (hasLoS(move.x, move.y, m.x, m.y)) hasLoSToEnemy = true;
-        });
-
-        if (hasLoSToEnemy) {
-            score += 50; // Huge bonus to get into a firing position
-
-            // BUT if we step into LoS with NO cover, penalize heavily
-            if (terrain.cover === 1.0) {
-                score -= 60; // Do not stand in open doorways/hallways!
-            } else {
-                score += (1.0 - terrain.cover) * 40; // Bonus for taking hard cover
+        if (targets.length === 0) {
+            let movable = getMovableTiles(unit);
+            if (movable.length > 0) {
+                let bestMove = null, bestVal = 999;
+                movable.forEach(m => {
+                    let val = heatmap[m.y][m.x];
+                    if (val === 999) {
+                        let nearestMarine = units.filter(u=>u.team===0)[0];
+                        if(nearestMarine) val = 50 + (Math.abs(m.x - nearestMarine.x) + Math.abs(m.y - nearestMarine.y));
+                    }
+                    if (val < bestVal) { bestVal = val; bestMove = m; }
+                });
+                if (bestMove) { unit.x = bestMove.x; unit.y = bestMove.y; unit.moved = true; render(); await new Promise(r => setTimeout(r, 400)); targets = getAttackTargets(unit); }
             }
-        } else {
-            // If moving somewhere without LoS, cover is nice but less critical
-            score += (1.0 - terrain.cover) * 10;
         }
-
-        // Add slight dither to prevent AI stacking in identical hallways
-        score += Math.random() * 2;
-
-        if (score > bestScore) {
-            bestScore = score;
-            bestMove = move;
-        }
-    });
-
-    if (bestMove) {
-        unit.x = bestMove.x;
-        unit.y = bestMove.y;
-        unit.moved = true;
-        render();
-        await sleep(400);
-    }
-}
-
-async function executeAIAttack(unit, targets) {
-    targets.sort((a, b) => {
-        const tA = getUnitAt(a.x, a.y);
-        const tB = getUnitAt(b.x, b.y);
-        return tA.hp - tB.hp;
-    });
-
-    const targetPos = targets[0];
-    const targetUnit = getUnitAt(targetPos.x, targetPos.y);
-
-    const dmg = resolveCombat(unit, targetUnit);
-
-    unit.attacked = true;
-    render();
-    spawnFloatingText(targetUnit.x, targetUnit.y, `-${dmg}`);
-    await sleep(600);
-}
-
-// ==================== INPUT & RENDERING ====================
-function onCellClick(x, y) {
-    if (gameOver || turn !== 0 || aiThinking) return;
-
-    showTileInfo(x, y);
-    const clickedUnit = getUnitAt(x, y);
-
-    if (selectedUnit && selectedUnit.x === x && selectedUnit.y === y) {
-        selectedUnit = null; movableTiles = []; attackableTiles = []; render(); return;
-    }
-
-    if (clickedUnit && clickedUnit.team === 0) {
-        selectedUnit = clickedUnit;
-        movableTiles = getMovableTiles(clickedUnit);
-        attackableTiles = getAttackTargets(clickedUnit);
-        render(); return;
-    }
-
-    if (selectedUnit) {
-        const isAttackable = attackableTiles.find(t => t.x === x && t.y === y);
-        const isMovable = movableTiles.find(t => t.x === x && t.y === y);
-
-        if (isAttackable && clickedUnit && clickedUnit.team === 1) {
-            const dmg = resolveCombat(selectedUnit, clickedUnit);
-            selectedUnit.attacked = true;
-            selectedUnit.moved = true;
-            selectedUnit = null; movableTiles = []; attackableTiles = [];
-            checkWinState();
-            render();
-            spawnFloatingText(clickedUnit.x, clickedUnit.y, `-${dmg}`);
-            return;
-        }
-
-        if (isMovable && !clickedUnit) {
-            selectedUnit.x = x; selectedUnit.y = y;
-            selectedUnit.moved = true;
-            movableTiles = [];
-            attackableTiles = getAttackTargets(selectedUnit);
-            render();
-            return;
+        if (targets.length > 0 && !unit.attacked) {
+            let tUnit = getUnitAt(targets[0].x, targets[0].y);
+            await performCombat(unit, tUnit);
+            unit.attacked = true;
+            await new Promise(r => setTimeout(r, 400));
         }
     }
+    aiThinking = false; endTurn();
 }
 
-function showTileInfo(x, y) {
-    const terrain = TERRAIN[map[y][x].type];
-    document.getElementById('info-terrain').textContent = terrain.name;
-    document.getElementById('info-defense').textContent = terrain.cover < 1.0 ? `${Math.round((1-terrain.cover)*100)}% Reduction` : 'None (Open)';
-
-    const unit = getUnitAt(x, y);
-    const unitEl = document.getElementById('info-unit');
-    if (unit) {
-        const uData = UNITS[unit.type];
-        unitEl.innerHTML = `<span style="color:${unit.team===0?'#00ffcc':'#ff3366'}">${uData.name}</span> HP:${unit.hp}/${unit.maxHp} | RNG:${uData.range}`;
-    } else {
-        unitEl.textContent = '-';
-    }
-}
+function getUnitAt(x, y) { return units.find(u => u.x === x && u.y === y); }
 
 function render() {
     const board = document.getElementById('board');
     board.style.gridTemplateColumns = `repeat(${boardWidth}, var(--cell-size))`;
-    board.style.gridTemplateRows = `repeat(${boardHeight}, var(--cell-size))`;
     board.innerHTML = '';
-
     for (let y = 0; y < boardHeight; y++) {
         for (let x = 0; x < boardWidth; x++) {
             const cell = document.createElement('div');
             cell.className = `cell ${map[y][x].type}`;
-
-            const terrainChar = document.createElement('span');
-            terrainChar.className = 'terrain-char';
-            terrainChar.textContent = TERRAIN[map[y][x].type].char;
-            cell.appendChild(terrainChar);
-
+            cell.id = `cell-${x}-${y}`;
+            const unit = getUnitAt(x, y);
+            if (!unit) {
+                const s = document.createElement('span'); s.className = 'terrain-char';
+                s.textContent = TERRAIN[map[y][x].type].char; cell.appendChild(s);
+            }
             if (selectedUnit && selectedUnit.x === x && selectedUnit.y === y) cell.classList.add('selected');
             if (movableTiles.find(t => t.x === x && t.y === y)) cell.classList.add('movable');
             if (attackableTiles.find(t => t.x === x && t.y === y)) cell.classList.add('range-highlight');
-
-            const unit = getUnitAt(x, y);
             if (unit) {
-                const unitSpan = document.createElement('span');
-                unitSpan.textContent = UNITS[unit.type].char;
-                unitSpan.className = unit.team === 0 ? 'marine' : 'alien';
-                cell.classList.add(unit.team === 0 ? 'marine-unit' : 'alien-unit');
-                cell.appendChild(unitSpan);
-
-                const hpContainer = document.createElement('div');
-                hpContainer.className = 'hp-bar-container';
-                const hpBar = document.createElement('div');
-                hpBar.className = 'hp-bar';
-                hpBar.style.width = `${(unit.hp / unit.maxHp) * 100}%`;
-                hpContainer.appendChild(hpBar);
-                cell.appendChild(hpContainer);
+                const uSpan = document.createElement('span'); uSpan.textContent = UNITS[unit.type].char;
+                uSpan.className = unit.team === 0 ? 'marine' : 'alien'; cell.appendChild(uSpan);
+                const hp = document.createElement('div'); hp.className = 'hp-bar-container';
+                hp.innerHTML = `<div class="hp-bar" style="width:${(unit.hp/unit.maxHp)*100}%"></div>`;
+                if(unit.team === 1) cell.classList.add('alien-unit'); cell.appendChild(hp);
             }
-
             cell.onclick = () => onCellClick(x, y);
             board.appendChild(cell);
         }
     }
 }
 
-function checkWinState() {
-    const marines = units.filter(u => u.team === 0);
-    const aliens = units.filter(u => u.team === 1);
-
-    if (aliens.length === 0) { log("SECTOR CLEARED. MARINES WIN."); gameOver = true; }
-    else if (marines.length === 0) { log("SQUAD WIPED OUT. ALIENS WIN."); gameOver = true; }
-
-    if (gameOver) {
-        document.getElementById('end-btn').disabled = true;
-        selectedUnit = null; movableTiles = []; attackableTiles = []; render();
+async function onCellClick(x, y) {
+    if (gameOver || turn !== 0 || aiThinking) return;
+    const clickedUnit = getUnitAt(x, y);
+    updateInfo(x, y);
+    if (clickedUnit && clickedUnit.team === 0 && !clickedUnit.attacked) {
+        selectedUnit = clickedUnit; movableTiles = getMovableTiles(clickedUnit); attackableTiles = getAttackTargets(clickedUnit); render(); return;
     }
+    if (selectedUnit) {
+        const isAtk = attackableTiles.find(t => t.x === x && t.y === y);
+        const isMov = movableTiles.find(t => t.x === x && t.y === y);
+        if (isAtk && clickedUnit && clickedUnit.team === 1) {
+            let refAttacker = selectedUnit;
+            refAttacker.attacked = true; refAttacker.moved = true;
+            selectedUnit = null; movableTiles = []; attackableTiles = [];
+            await performCombat(refAttacker, clickedUnit);
+            return;
+        }
+        if (isMov && !clickedUnit) {
+            selectedUnit.x = x; selectedUnit.y = y; selectedUnit.moved = true;
+            movableTiles = []; attackableTiles = getAttackTargets(selectedUnit); render(); return;
+        }
+    }
+    selectedUnit = null; movableTiles = []; attackableTiles = []; render();
 }
 
 function endTurn() {
     if (gameOver || aiThinking) return;
-
-    turn = 1 - turn;
-    units.forEach(u => { u.moved = false; u.attacked = false; });
+    turn = 1 - turn; units.forEach(u => { u.moved = false; u.attacked = false; });
     selectedUnit = null; movableTiles = []; attackableTiles = [];
-
-    render(); updateUI();
-
-    if (turn === 1) {
-        setTimeout(runAITurn, 500);
-    }
+    render(); updateUI(); if (turn === 1) setTimeout(runAITurn, 500);
 }
 
 function updateUI() {
     document.getElementById('turn').textContent = turn + 1;
-    const teamEl = document.getElementById('team');
-    teamEl.textContent = turn === 0 ? 'MARINES' : 'ALIEN ACTIVITY...';
-    teamEl.style.color = turn === 0 ? '#00ffcc' : '#ff3366';
+    const t = document.getElementById('team'); t.textContent = turn === 0 ? 'MARINES' : 'ALIEN PHASE...';
+    t.style.color = turn === 0 ? 'var(--text-marine)' : 'var(--text-alien)';
     document.getElementById('end-btn').disabled = (turn !== 0 || aiThinking || gameOver);
 }
 
-function log(msg) {
-    const logDiv = document.getElementById('log');
-    const entry = document.createElement('div');
-    entry.innerHTML = `> ${msg}`;
-    logDiv.appendChild(entry);
-    logDiv.scrollTop = logDiv.scrollHeight;
+function log(msg) { const l = document.getElementById('log'); l.innerHTML += `<div>> ${msg}</div>`; l.scrollTop = l.scrollHeight; }
+
+function spawnFloatingText(x, y, text, isReflex) {
+    const cell = document.getElementById(`cell-${x}-${y}`);
+    if (!cell) return;
+    const div = document.createElement('div');
+    div.className = isReflex ? 'float-text float-reflex' : 'float-text';
+    div.textContent = text;
+    cell.appendChild(div);
+    setTimeout(() => { if (div && div.parentNode) div.remove(); }, 1000);
 }
 
-function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-function spawnFloatingText(x, y, text) {
-    const index = y * boardWidth + x;
-    const cell = document.getElementById('board').children[index];
-    if (cell) {
-        const div = document.createElement('div');
-        div.className = `float-text float-damage`;
-        div.textContent = text;
-        cell.appendChild(div);
-        setTimeout(() => div.remove(), 1000);
-    }
+function checkWinState() {
+    const m = units.filter(u => u.team === 0).length, a = units.filter(u => u.team === 1).length;
+    if (a === 0) { log("SECTOR CLEARED. VICTORY."); gameOver = true; }
+    else if (m === 0) { log("SQUAD WIPED. DEFEAT."); gameOver = true; }
+    if (gameOver) document.getElementById('end-btn').disabled = true;
 }
 
-initGame();
+function resetGame() {
+    gameOver = false; turn = 0; aiThinking = false; units = []; selectedUnit = null;
+    movableTiles = []; attackableTiles = [];
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('end-btn').disabled = false;
+    initGame(LEVELS[document.getElementById('levelSelect').value]);
+    updateUI();
+}
+
+function updateInfo(x, y) {
+    if (!map[y] || !map[y][x]) return;
+    const t = TERRAIN[map[y][x].type], u = getUnitAt(x, y);
+    document.getElementById('info-terrain').textContent = t.name;
+    document.getElementById('info-defense').textContent = (t.cover < 1 ? Math.round((1-t.cover)*100)+"%" : "None");
+    document.getElementById('info-unit').textContent = (u ? UNITS[u.type].name + " (HP:"+u.hp+")" : "-");
+}
+
+initGame(LEVELS.classic);
