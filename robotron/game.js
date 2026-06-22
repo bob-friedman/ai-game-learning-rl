@@ -480,6 +480,11 @@ class AuthenticPlayer extends Entity {
         this.aimY = 0;
     }
     update() {
+        // Freeze player movement/shooting while dying
+        if (this.state === 'dying') {
+            this.stateCount++;
+            return;
+        }
         if (this.state === 'spawning') {
             if (this.spawnDelay > 0) { this.spawnDelay--; return; }
             this.stateCount++;
@@ -518,6 +523,7 @@ class AuthenticPlayer extends Entity {
             ctx.fillRect(this.x-6, this.y-6, 12, 12); return;
         }
         if (this.state === 'dying') {
+            if (this.stateCount > 45) return; // Hide the player completely after 0.75 seconds
             const flash = Math.floor(state.frames / 2) % 2;
             const size = 6 + Math.abs(Math.sin(state.frames * 0.4)) * 6;
             ctx.fillStyle = flash ? '#fff' : '#f00';
@@ -543,18 +549,14 @@ class AuthenticPlayer extends Entity {
 
         // Shadow
         drawSpriteRect(this.x, this.y, 0, -.5, .6, .12, 'rgba(0,0,0,0.4)');
-
         // Legs
         const baseLegH = .3, leftLegH = baseLegH + legStretch, rightLegH = baseLegH - legStretch;
         drawSpriteRect(this.x, this.y, -.15, bodyBottomY - leftLegH/2, .2, leftLegH, legs);
         drawSpriteRect(this.x, this.y, .15, bodyBottomY - rightLegH/2, .2, rightLegH, legs);
-
         // Torso
         drawSpriteRect(this.x, this.y, 0, bodyCenterY, .5, .5, body);
-
         // Shoulders/Armor accents
         drawSpriteRect(this.x, this.y, 0, bodyCenterY + .15, .6, .2, legs);
-
         // Head (Helmet)
         drawSpriteRect(this.x, this.y, 0, .4 + bob, .45, .45, helmet);
         // Visor
@@ -585,6 +587,8 @@ class AuthenticGrunt extends Entity {
     getSpeed() { return 0.75 + (((state.wave - 1) % 5) * 0.07); }
     update() {
         if (state.warmup > 0) return;
+
+        // Hard push away from static Electrodes
         for (let e of enemies) {
             if (e.type === 'electrode' && !e.marked) {
                 const dist = Math.hypot(this.x - e.x, this.y - e.y);
@@ -597,6 +601,7 @@ class AuthenticGrunt extends Entity {
                 }
             }
         }
+
         let speed = this.getSpeed();
         if (this.moveCount > 30) speed *= (30 / this.moveCount);
         if (Math.floor(this.moveCount) === 1) {
@@ -778,6 +783,7 @@ class AuthenticBrain extends Entity {
                 }
             }
         });
+
         const dirs = [{x:0,y:-1}, {x:1,y:0}, {x:0,y:1}, {x:-1,y:0}];
         const speed = 1.4;
         if (this.moveCount > 0) {
@@ -1106,9 +1112,8 @@ class AuthenticTank extends Entity {
 }
 
 class AuthenticHuman extends Entity {
-    constructor(type) {
-        const x = 50 + Math.random() * (state.width - 100), y = 50 + Math.random() * (state.height - 100);
-        super(x, y, 6, '#f8c');
+    constructor(type, x, y) {
+        super(x, y, 6, '#f8c'); // Replaced the random logic with parameters
         this.type = type;
         this.wanderAngle = Math.random() * Math.PI * 2;
         this.targetAngle = this.wanderAngle;
@@ -1126,12 +1131,25 @@ class AuthenticHuman extends Entity {
                 }
             }
         });
+
         let threat = null, minTD = Infinity;
         enemies.forEach(e => {
-            if (e.type === 'hulk' || e.type === 'brain') {
-                const d = this.dist(e); if (d < minTD) { minTD = d; threat = e; }
+            // Humans now panic from hulks, brains, and tanks
+            if (e.type === 'hulk' || e.type === 'brain' || e.type === 'tank') {
+                const d = this.dist(e);
+                if (d < minTD) { minTD = d; threat = e; }
+
+                // --- NEW: Tank Collision Destroys Human ---
+                if (e.type === 'tank' && !e.marked && d < this.radius + e.radius) {
+                    this.marked = true;
+                    explode(this.x, this.y, '#f8c'); // Pink explosion
+                    AudioSys.humanDie();
+                    addFloat(this.x, this.y, 'CRUSHED', '#f00');
+                }
+                // ------------------------------------------
             }
         });
+
         if (threat && minTD < 100) {
             this.targetAngle = Math.atan2(this.y - threat.y, this.x - threat.x);
             this.panic = 10;
@@ -1219,13 +1237,26 @@ function checkExtraLife(increment) {
         addFloat(state.width/2,state.height/2,'EXTRA LIFE','#ff0');
     }
 }
-function spawnPos(minDist = 150) {
+function spawnPos(minDist = 150, avoidElectrodes = false) {
     let x, y, d; const margin = 25;
-    do {
+    let attempts = 0;
+    while (attempts < 100) {
         x = margin + Math.random() * (state.width - margin * 2);
         y = margin + Math.random() * (state.height - margin * 2);
         d = Math.hypot(x - player.x, y - player.y);
-    } while(d < minDist);
+
+        let valid = (d >= minDist);
+        // If flag is set, ensure we aren't spawning on top of an existing Electrode
+        if (valid && avoidElectrodes) {
+            for (let e of enemies) {
+                if (e.type === 'electrode' && Math.hypot(x - e.x, y - e.y) < 35) {
+                    valid = false; break;
+                }
+            }
+        }
+        if (valid) return {x, y};
+        attempts++;
+    }
     return {x, y};
 }
 function spawnWave() {
@@ -1236,17 +1267,9 @@ function spawnWave() {
 
     const waveCfg = getWaveConfig(state.wave);
 
-    for (let i = 0; i < (waveCfg.Daddy || 0); i++) humans.push(new AuthenticHuman('daddy'));
-    for (let i = 0; i < (waveCfg.Mommy || 0); i++) humans.push(new AuthenticHuman('mommy'));
-    for (let i = 0; i < (waveCfg.Mikey || 0); i++) humans.push(new AuthenticHuman('mikey'));
-
-    for (let i = 0; i < (waveCfg.Grunt || 0); i++) { const p = spawnPos(); enemies.push(new AuthenticGrunt(p.x, p.y)); }
-    for (let i = 0; i < (waveCfg.Hulk || 0); i++) { const p = spawnPos(); enemies.push(new AuthenticHulk(p.x, p.y)); }
-    for (let i = 0; i < (waveCfg.Brain || 0); i++) { const p = spawnPos(); enemies.push(new AuthenticBrain(p.x, p.y)); }
-    for (let i = 0; i < (waveCfg.Tank || 0); i++) { const p = spawnPos(); enemies.push(new AuthenticTank(p.x, p.y)); }
-
+    // Spawn Electrodes FIRST so they can be avoided by other entities
     for (let i = 0; i < (waveCfg.Electrode || 0); i++) {
-        const p = spawnPos(100);
+        const p = spawnPos(100, true);
         const e = new Entity(p.x, p.y, 9, '#ff0');
         e.type = 'electrode'; e.score = 0;
         e.draw = function() {
@@ -1260,8 +1283,8 @@ function spawnWave() {
                 ctx.save(); ctx.translate(this.x, this.y);
                 const poly = (radius, color) => {
                     ctx.fillStyle = color; ctx.beginPath();
-                    for (let i = 0; i < 3; i++) {
-                        const a = Math.PI/2 + i * (2 * Math.PI / 3);
+                    for (let j = 0; j < 3; j++) {
+                        const a = Math.PI/2 + j * (2 * Math.PI / 3);
                         ctx.lineTo(Math.cos(a) * radius * SPRITE_SCALE, -Math.sin(a) * radius * SPRITE_SCALE);
                     }
                     ctx.closePath(); ctx.fill();
@@ -1272,11 +1295,28 @@ function spawnWave() {
         };
         enemies.push(e);
     }
+
+    // Spawn Humans and Enemies using the avoidElectrodes flag
+    for (let i = 0; i < (waveCfg.Daddy || 0); i++) { const p = spawnPos(150, true); humans.push(new AuthenticHuman('daddy', p.x, p.y)); }
+    for (let i = 0; i < (waveCfg.Mommy || 0); i++) { const p = spawnPos(150, true); humans.push(new AuthenticHuman('mommy', p.x, p.y)); }
+    for (let i = 0; i < (waveCfg.Mikey || 0); i++) { const p = spawnPos(150, true); humans.push(new AuthenticHuman('mikey', p.x, p.y)); }
+
+    for (let i = 0; i < (waveCfg.Grunt || 0); i++) { const p = spawnPos(150, true); enemies.push(new AuthenticGrunt(p.x, p.y)); }
+    for (let i = 0; i < (waveCfg.Hulk || 0); i++) { const p = spawnPos(150, true); enemies.push(new AuthenticHulk(p.x, p.y)); }
+    for (let i = 0; i < (waveCfg.Brain || 0); i++) { const p = spawnPos(150, true); enemies.push(new AuthenticBrain(p.x, p.y)); }
+    for (let i = 0; i < (waveCfg.Tank || 0); i++) { const p = spawnPos(150, true); enemies.push(new AuthenticTank(p.x, p.y)); }
+
     addFloat(state.width/2, state.height/3, `WAVE ${state.wave}`, '#0ff');
 }
 function killPlayer() {
-    state.lives--; state.deathFlash = 18; player.state = 'dying'; state.rescueBonus = 1000;
+    if (player.state === 'dying') return; // Prevent multiple death triggers
+
+    state.lives--; state.deathFlash = 18;
+    player.state = 'dying'; player.stateCount = 0; // Reset stateCount for the death animation
+    state.rescueBonus = 1000;
+
     explode(player.x, player.y, '#0ff'); AudioSys.explosion(true); bullets = [];
+
     if(state.lives <= 0) {
         state.running = false;
         if(state.score > state.highScore) {
@@ -1287,7 +1327,9 @@ function killPlayer() {
         ui.over.classList.remove('hidden');
         Diagnostics.exportLog();
     } else {
+        // Increased from 1000ms to 2000ms for a noticeable dramatic pause
         setTimeout(() => {
+            if (!state.running) return;
             state.warmup = 150; player.x = state.width/2; player.y = state.height/2;
             player.state = 'spawning'; player.spawnDelay = 30; player.stateCount = 0; player.invuln = 120;
             const safeRadius = 250;
@@ -1299,7 +1341,7 @@ function killPlayer() {
                 }
             });
             addFloat(state.width/2, state.height/2, 'RESURRECTION', '#0ff');
-        }, 1000);
+        }, 2000);
     }
 }
 function resolveCollision(circle1, circle2, push=true) {
@@ -1315,6 +1357,17 @@ function resolveCollision(circle1, circle2, push=true) {
 let lastFrameTime = 0;
 function update() {
     if(!state.running) return;
+    //Pause bypass
+    if(state.isPaused) {
+        ctx.fillStyle = 'rgba(0,0,0,0.05)'; // Slowly dims the screen
+        ctx.fillRect(0, 0, state.width, state.height);
+        ctx.fillStyle = '#0ff'; ctx.font = 'bold 40px Courier New'; ctx.textAlign = 'center';
+        ctx.shadowBlur = 15; ctx.shadowColor = '#0ff';
+        ctx.fillText("PAUSED", state.width/2, state.height/2);
+        ctx.shadowBlur = 0;
+        requestAnimationFrame(update);
+        return;
+    }
     const now = performance.now();
     if (now - lastFrameTime < 16.67) { requestAnimationFrame(update); return; }
     lastFrameTime = now; state.frames++;
@@ -1346,7 +1399,18 @@ function update() {
         bullets.forEach(b => {
             if(b.isEnemy) {
                 if(player.dist(b) < player.radius + b.radius && player.invuln <= 0) { b.marked = true; killPlayer(); }
-
+                // --- Tank Bombs Destroy Humans ---
+                if (b.isBounceBomb && !b.marked) {
+                    humans.forEach(h => {
+                        if (!h.marked && b.dist(h) < h.radius + b.radius) {
+                            h.marked = true;
+                            b.marked = true; // Destroy the bomb
+                            explode(h.x, h.y, '#f8c'); // Pink explosion
+                            AudioSys.humanDie();
+                            addFloat(h.x, h.y, 'BOMBED', '#f00');
+                        }
+                    });
+                }
                 if (!b.marked) {
                     enemies.forEach(e => {
                         if(e.marked || e === b.shooter || b.marked) return;
@@ -1373,16 +1437,18 @@ function update() {
                         }
                     }
                 });
-                // Player bullets destroying Bounce Bombs
+
                 bullets.forEach(eb => {
-                    if (eb.isEnemy && eb.isBounceBomb && !eb.marked && !b.marked) {
+                    // Removed the eb.isBounceBomb check so it applies to Brain shots too
+                    if (eb.isEnemy && !eb.marked && !b.marked) {
                         if (b.dist(eb) < eb.radius + b.radius + 10) {
                             b.marked = true;
                             eb.marked = true;
                             state.score += 25;
                             addFloat(eb.x, eb.y, '25', '#fa4');
                             checkExtraLife(25);
-                            explode(eb.x, eb.y, '#fa4');
+                            // Purple explosion for brain shots, orange for tank bombs
+                            explode(eb.x, eb.y, eb.isBounceBomb ? '#fa4' : '#c0f');
                             AudioSys.playNoise(0.1, 0.1);
                         }
                     }
@@ -1397,13 +1463,52 @@ function update() {
 
     const remaining = enemies.filter(e => ['grunt', 'brain', 'prog', 'tank'].includes(e.type)).length;
     if(remaining === 0 && state.running && state.warmup <= 0) {
-        state.wave++; ui.wave.textContent = state.wave; spawnWave();
+        // Initialize transition delay if it doesn't exist yet
+        if (!state.waveClearDelay) {
+            state.waveClearDelay = 120; // 120 frames = ~2 seconds of feedback delay
+        }
+
+        state.waveClearDelay--;
+
+        // Draw Retro Wave Completion Feedback
+        ctx.fillStyle = '#f0f'; // Retro Magenta
+        ctx.font = 'bold 36px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText(`WAVE ${state.wave} CLEAR!`, state.width / 2, state.height / 2 - 20);
+
+        ctx.fillStyle = '#0ff'; // Retro Cyan
+        ctx.font = 'bold 20px Courier New';
+        ctx.fillText("GET READY FOR THE NEXT ASSAULT...", state.width / 2, state.height / 2 + 30);
+
+        // Once the timer hits 0, execute the transition
+        if(state.waveClearDelay <= 0) {
+            state.wave++;
+            ui.wave.textContent = state.wave;
+            spawnWave();
+            state.waveClearDelay = 0;
+        }
+    } else {
+        // Reset delay holder while enemies are active
+        state.waveClearDelay = 0;
     }
 
     ui.score.textContent = state.score.toLocaleString();
     ui.lives.textContent = state.lives;
     requestAnimationFrame(update);
 }
+state.isPaused = false;
+
+function togglePause() {
+    if (!state.running) return;
+    state.isPaused = !state.isPaused;
+
+    // Reset the frame timer
+    if (!state.isPaused) lastFrameTime = performance.now();
+}
+// 'P' key to pause the game
+window.addEventListener('keydown', e => {
+    if (e.key === 'p' || e.key === 'P') togglePause();
+});
 function startGame() {
     AudioSys.init(); ImageCache.load();
     for (const key in keys) keys[key] = false;
