@@ -132,6 +132,19 @@ To resolve this limitation, Subspace-Aware Sparse Autoencoders (SASA) replace si
 | **Feature Splitting** | High; fragments coherent concepts into many latents. | Low; consolidates multi-dimensional features. |
 | **Empirical Performance** | Demands extensive token budgets for reconstruction. | Matches reconstruction on half the token budget. |
 
+## The Epistemological Boundary: Interpolation Limits and Verifier Architectures
+
+While the transition to continuous latent manifolds elegantly resolves the combinatorial sparsity of discrete data, it introduces a profound epistemological vulnerability. By enabling a neural network to smoothly interpolate across the "empty space" of unobserved sequences, the architecture gains the ability to guess. However, geometric proximity in a semantic manifold does not guarantee factual accuracy or logical validity. When a model traverses the empty space between known data points to generate a novel response, it risks generating plausible but factually incorrect outputs—a phenomenon commonly known as hallucination.
+
+This reveals a fundamental **limit of knowledge** within sequence modeling: a model cannot deduce rigorous novel truths purely through the geometric blending of adjacent concepts. The sparsity of *data* has been solved, but the sparsity of *reasoning* remains. When a model reaches the boundary of its training manifold, continuous interpolation fails to substitute for discrete, logical deduction. 
+
+To overcome this limitation and ground continuous generation in factual reality, modern AI architectures employ **Verifier Networks**. Rather than relying solely on the generative model's next-token probabilities, verifiers act as external discriminators that evaluate the logical consistency and factual correctness of the generated trajectories. These verifiers generally fall into two categories:
+
+1. **Outcome Reward Models (ORMs):** These verifiers evaluate the final output of a generated sequence, scoring whether the model successfully arrived at a correct conclusion. While effective for simple queries, ORMs suffer from sparse reward signals in complex, multi-step reasoning tasks.
+2. **Process Reward Models (PRMs):** To combat the sparsity of reasoning steps, PRMs evaluate the generation token-by-token or step-by-step. By assigning a correctness score to intermediate thoughts, PRMs constrain the model's traversal of the semantic manifold, effectively acting as "guardrails" that prevent the model from drifting into the nonsensical regions of the continuous space.
+
+By coupling generative models with verification search algorithms (such as Monte Carlo Tree Search or Best-of-N sampling during test-time compute), AI systems can navigate the continuous manifold more safely. The verifier enforces a discrete, logical reality-check against the model's continuous approximations, bridging the gap between semantic interpolation and rigorous epistemic knowledge.
+
 ## Conclusion: The Transition from Data Sparsity to Feature Superposition
 
 The historical trajectory of natural language processing demonstrates a fundamental shift in how sparsity is managed. In classical computational linguistics, discrete symbolic representations encountered a combinatorial wall, where the vast majority of potential word sequences were empty cells. Early statistical systems mitigated this discrete data sparsity through heuristic smoothing and discounting, utilizing recursive Kneser-Ney continuation probabilities to allocate probability mass to unobserved events.
