@@ -145,6 +145,9 @@ Ranged units (Artillery, Rocket) attack at distance without retaliation, but can
 
 ### Units and Terrain
 
+<details>
+<summary>Click to expand</summary>
+
 | Unit | HP | Move | Vision | Range | Capture | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Infantry** | 10 | 3 | 2 | 1 | Yes | Basic unit. Can capture HQ. |
@@ -162,7 +165,12 @@ Ranged units (Artillery, Rocket) attack at distance without retaliation, but can
 | **Road** | 0% | 1 | Fast movement. |
 | **Water** | - | Impassable | Impassable to ground units. |
 
+</details>
+
 ### Damage Matrix (Base Damage)
+
+<details>
+<summary>Click to expand</summary>
 
 | Attacker \ Defender | Infantry | Tank | Mech | Heavy | Artillery | Rocket |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -174,6 +182,8 @@ Ranged units (Artillery, Rocket) attack at distance without retaliation, but can
 | **Rocket** | 6 | 10 | 9 | 8 | 6 | 5 |
 
 *Actual damage = Base × (Attacker HP / Max HP) × Terrain Defense.*
+
+</details>
 
 **Victory Condition: HQ Capture.**
 HQs require 20 capture points to seize. Each turn, capturing units contribute points equal to their current HP (max 10). A full-health Infantry or Mech needs 2 turns to capture; wounded units take longer. Only Infantry and Mech can capture. If both sides lose their capturing units, then a stalemate occurs.
@@ -270,6 +280,9 @@ The objective is to eliminate all alien threats while preserving your squad. Wea
 
 ### Environment & Terrain
 
+<details>
+<summary>Click to expand</summary>
+
 | Char | Name | Cover Mod | Move Cost | Blocks LoS? | Notes |
 | :---: | :--- | :---: | :---: | :---: | :--- |
 | **.** | Deck | 1.0x | 1 | No | Very dangerous open ground |
@@ -277,7 +290,12 @@ The objective is to eliminate all alien threats while preserving your squad. Wea
 | **+** | Airlock | 0.8x | 1 | **Yes** | 20% damage reduction. Blocks vision until occupied |
 | **#** | Bulkhead | - | Blocked | **Yes** | Impassable ship walls |
 
+</details>
+
 ### Unit Rosters
+
+<details>
+<summary>Click to expand</summary>
 
 **Marines**
 | Char | Class | HP | Move | Range | Base Dmg | Role |
@@ -291,6 +309,8 @@ The objective is to eliminate all alien threats while preserving your squad. Wea
 | :---: | :--- | :---: | :---: | :---: | :---: | :--- |
 | **S** | Stalker | 10 | 5 | 3 | 7 | Fast skirmisher; uses hit-and-run tactics |
 | **B** | Brute | 22 | 3 | 2 | 10 | Tank unit; lethal at close range |
+
+</details>
 
 ### Screenshot
 
