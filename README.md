@@ -3,7 +3,22 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17273372.svg)](https://doi.org/10.5281/zenodo.17273372)
 
 This repository has a collection of open-source games designed for use in reinforcement learning (RL) research and development. The games provide diverse environments for training and testing AI agents, with a focus on strategic thinking, puzzle-solving, and tactical gameplay. These features allow for adaptation for the generation of data that is used in training an AI model by the methods of reinforcement learning.
+
+## Table of Contents
+
+- [Chess](#chess)
+- [Chess v1-LLM](#chess-v1-llm)
+- [Boxes](#boxes)
+- [Grid Combat (Ultimate Unified Edition v1.5)](#grid-combat-ultimate-unified-edition-v15)
+- [Deep Space Breach (v5.6)](#deep-space-breach-v56)
+- [Othello](#othello)
+- [Robotron Clone](#robotron-clone)
+- [Installation](#installation)
+- [License](#license)
+- [Data Retrieval Entry Points](#data-retrieval-entry-points)
+- [Contributors](#contributors)
 ___
+<a id="chess"></a>
 ## Chess
 
 ![Chess Icon](docs/images/icon_chess.png)
@@ -29,8 +44,15 @@ Chess includes both historical and computationally curated puzzle sets. The cura
 
 ### Screenshot
 
+<details>
+<summary>Click to expand</summary>
+
 ![Chess Screenshot 1](docs/images/screenshot_1_chess.png)
+
+</details>
+
 ___
+<a id="chess-v1-llm"></a>
 ## Chess v1-LLM
 
 ![Chess Icon](docs/images/icon_chess_llm.png)
@@ -52,8 +74,15 @@ Key features include:
 
 ### Screenshot
 
+<details>
+<summary>Click to expand</summary>
+
 ![Chess Screenshot 1](docs/images/screenshot_1_chess_llm.png)
+
+</details>
+
 ___
+<a id="boxes"></a>
 ## Boxes
 
 ![Boxes Icon](docs/images/icon_boxes.png)
@@ -73,8 +102,15 @@ Boxes supports multiple control schemes to accommodate different platforms and p
 
 ### Screenshot
 
+<details>
+<summary>Click to expand</summary>
+
 ![Boxes Screenshot](docs/images/screenshot_1_boxes.png)
+
+</details>
+
 ___
+<a id="grid-combat-ultimate-unified-edition-v15"></a>
 ## Grid Combat (Ultimate Unified Edition v1.5)
 
 ![Grid Combat Icon](docs/images/icon_gridcombat.png)
@@ -163,7 +199,12 @@ Each skirmish is a core force (2 Infantry, 1 Mech, 2 Tanks) plus randomized supp
 
 ### Screenshot
 
+<details>
+<summary>Click to expand</summary>
+
 ![Grid Combat Screenshot 1](docs/images/screenshot_1_gridcombat.png)
+
+</details>
 
 ### Autoresearch — Autonomous AI Improvement
 
@@ -205,6 +246,7 @@ Requirements: Google Colab account. Gemini API key (recommended) or T4 GPU runti
 > The `GridCombat_Autoresearch.ipynb` file may not be displayed correctly by the GitHub Markdown viewer. For an accurate view of the notebook's content, please use the **RAW** mode or open it directly in Google Colab.
 
 ___
+<a id="deep-space-breach-v56"></a>
 ## Deep Space Breach (v5.6)
 
 Deep Space Breach is a tactical Sci-Fi Close Quarters Battle (CQB) engine inspired by the intense, lethal gunplay of games like X-Com. Set within the cramped, hazardous corridors of a deep-space vessel, players command a squad of Marines tasked with eliminating alien signatures. The game emphasizes spatial awareness, the "fatal funnel" of airlocks, and the importance of hard cover.
@@ -251,9 +293,15 @@ The objective is to eliminate all alien threats while preserving your squad. Wea
 
 ### Screenshot
 
+<details>
+<summary>Click to expand</summary>
+
 ![Deep Space Breach Screenshot](docs/images/screenshot_1_deepspacebreach.png)
 
+</details>
+
 ___
+<a id="othello"></a>
 ## Othello
 
 ![Othello Icon](docs/images/icon_othello.png)
@@ -271,6 +319,7 @@ Key features include:
 - **Review Mode**: After a game concludes, players can review the final board state before starting a new match.
 
 ___
+<a id="robotron-clone"></a>
 ## Robotron Clone
 
 Robotron Clone is a fast-paced multi-directional shooter inspired by the classic arcade game Robotron: 2084 (Eugene Jarvis & Larry DeMar, Williams Electronics, 1982). Players must survive waves of hostile robots while rescuing remaining humans. The game emphasizes quick reflexes and strategic movement in a chaotic, high-intensity environment. A diagnostic log file is exported at the end of each game session to facilitate analysis of the underlying AI model.
@@ -297,9 +346,15 @@ Robotron Clone supports dual-stick style controls on a desktop system.
 
 ### Screenshot
 
+<details>
+<summary>Click to expand</summary>
+
 ![Robotron Clone Screenshot](docs/images/screenshot_1_robotron.png)
 
+</details>
+
 ___
+<a id="installation"></a>
 ## Installation
 
 To run the games locally, clone this repository and serve the directory chess/, boxes/, othello/, robotron/, or grid-combat/ via a web server. This step will make the games available to a web browser. A local web server may be used: `python3 -m http.server`, which defaults to port 8000.
@@ -310,13 +365,30 @@ git clone https://github.com/bob-friedman/ai-game-learning-rl.git
 
 These games may also run as files with limited or full functionality if the web browser has permission to access local files. Here is an example in Windows if they are installed in C:\GamesRL\: `file:///C:/GamesRL/boxes/index.html`.
 
+<a id="license"></a>
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
 
+> [!NOTE]
+> The Othello game is an exception and is **not** covered by this license. It originated from code generated by Large Language Models and incorporates parts of other works.
+
+<a id="data-retrieval-entry-points"></a>
 ## Data Retrieval Entry Points
 
 The games in this repository are designed to be transparent and accessible for AI research. The following sections detail the primary functions and variables that can be used to extract game state, history, and other relevant data for training reinforcement learning models.
+
+**At a glance:**
+
+| Game | State Representation | Action Space | Dynamics | Built-in Opponent |
+| :--- | :--- | :--- | :--- | :--- |
+| Chess | FEN / PGN strings | Legal moves (variable, up to ~218) | Deterministic | Yes (Stockfish engine) |
+| Chess v1-LLM | FEN / PGN + LLM commentary log | Legal moves (variable, up to ~218) | Deterministic board, non-deterministic opponent | Yes (configurable LLM) |
+| Boxes | 2D grid + player/box/goal coordinates | 4 movement directions | Deterministic | No (single-player puzzle) |
+| Grid Combat | Unit/structure objects on a 2D terrain grid | Move + attack combinations (variable, per-unit) | Deterministic combat, randomized skirmish maps | Yes (heuristic AI, tunable via Autoresearch) |
+| Deep Space Breach | Unit objects on a 2D ship layout | Move + attack combinations (variable, per-unit) | Deterministic combat, fixed/selectable layouts | Yes (heuristic AI) |
+| Othello | 8x8 board array | Legal moves (variable, up to 8x8) | Deterministic | Yes (Easy/Medium/Hard) |
+| Robotron Clone | Real-time entity positions (player, enemies, humans, bullets) | Movement + firing direction | Stochastic enemy spawns and behavior | No (adversarial NPCs, not a single opponent) |
 
 ### Chess
 
@@ -405,6 +477,7 @@ The Robotron Clone game logic is contained in `robotron/game.js`. Key data struc
 - **`bullets`**: An array of active projectiles from both the player and enemies.
 - **`Diagnostics`**: A system that can record and export detailed frame-by-turn state data. Calling `Diagnostics.exportLog()` will generate a text file of the session's history.
 
+<a id="contributors"></a>
 ## Contributors
 
 The development of the software and code benefited significantly from discussions and iterative refinement with AI language models. The author oversaw and reviewed the accuracy and robustness of all parts of its development.
@@ -413,4 +486,3 @@ The development of the software and code benefited significantly from discussion
 -   **Gemini 3.1 Pro** (Google) — transition to Google Flash Lite in the Autoresearch workflow script and several bug fixes.
 -   **Claude Sonnet** (Anthropic) — design and implementation of the Grid Combat Autoresearch system, including the two-loop architecture, experiment harness, evaluator, git persistence strategy, and formal documentation of findings.
 -   **Gemini (Deep Space Breach)** — development of the Sci-Fi tactical variant, including the BFS corridor pathfinding and lethal gunplay mechanics.
--   **Othello Licensing**: Please note that the Othello game is not licensed, as it originated from code generated by Large Language Models and incorporates parts of other works.
