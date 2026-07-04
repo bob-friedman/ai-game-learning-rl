@@ -10,6 +10,7 @@ This repository has a collection of open-source games designed for use in reinfo
 - [Chess v1-LLM](#chess-v1-llm)
 - [Boxes](#boxes)
 - [Grid Combat (Ultimate Unified Edition v1.5)](#grid-combat-ultimate-unified-edition-v15)
+  - [Autoresearch — Autonomous AI Improvement](#autoresearch--autonomous-ai-improvement)
 - [Deep Space Breach (v5.6)](#deep-space-breach-v56)
 - [Othello](#othello)
 - [Robotron Clone](#robotron-clone)
