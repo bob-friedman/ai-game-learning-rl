@@ -43,7 +43,7 @@ flowchart TD
 
 -   **`GridCombat_Autoresearch.ipynb`**: The primary implementation of the research loop, designed to run in Google Colab. It handles the inference, evaluation, and persistence of the research experiments.
 -   **`AUTORESEARCH.md`**: Documents the theoretical framework and the generalized two-loop architecture used by this system.
--   **`SPARSITY_RESOLUTION.md`**: Research document exploring the resolution of semantic sparsity in natural language processing through heuristic smoothing, manifolds, and Mixture of Experts (MoE) architectures.
+-   **`SPARSITY_RESOLUTION.md`**: Research document exploring the resolution of semantic sparsity in natural language processing through heuristic smoothing and manifolds.
 -   **`ai.js`**: The current best version of the Grid Combat AI heuristic.
 -   **`baseline_ai.js`**: The baseline AI used for comparison during experiments.
 -   **`evaluate.js`**: The Node.js-based evaluation script that measures the win rate of the candidate AI against the baseline across 400 games.
