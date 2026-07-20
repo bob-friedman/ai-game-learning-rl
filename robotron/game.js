@@ -1461,7 +1461,7 @@ function update() {
     enemies = enemies.filter(e => !e.marked); enemies.forEach(e => e.draw());
     particles.forEach(p => p.update()); particles = particles.filter(p => p.life > 0.1); particles.forEach(p => p.draw());
 
-    if (state.warmup <= 0 && player.state === 'normal') {
+    if (state.warmup <= 0 && player.state === 'normal' && (!state.waveClearDelay || state.waveClearDelay <= 0)) {
         bullets.forEach(b => {
             if(b.isEnemy) {
                 if(player.dist(b) < player.radius + b.radius && player.invuln <= 0) { b.marked = true; killPlayer(); }
