@@ -510,7 +510,7 @@ class AuthenticPlayer extends Entity {
             const len = Math.hypot(sx, sy);
             this.aimX = sx/len;
             this.aimY = sy/len;
-            if (this.cooldown <= 0) {
+            if (this.cooldown <= 0 && (!state.waveClearDelay || state.waveClearDelay <= 0)) { // Prevent shooting during wave clear
                 bullets.push(new Bullet(this.x, this.y, this.aimX, this.aimY, false, this));
                 this.cooldown = 7;
                 AudioSys.shoot();
@@ -583,6 +583,12 @@ class AuthenticGrunt extends Entity {
         this.dx = 0; this.dy = 0;
         this.score = 100;
         this.frameTimer = 0;
+        this.historyX = x;
+        this.historyY = y;
+        this.stuckCheckTimer = 0;
+        this.evadeTimer = 0;
+        this.evadeDx = 0;
+        this.evadeDy = 0;
     }
     getSpeed() { return 0.75 + (((state.wave - 1) % 5) * 0.07); }
     update() {
@@ -603,14 +609,37 @@ class AuthenticGrunt extends Entity {
         }
 
         let speed = this.getSpeed();
-        if (this.moveCount > 30) speed *= (30 / this.moveCount);
-        if (Math.floor(this.moveCount) === 1) {
-            this.dx = Math.abs(player.x - this.x) < 4 ? 0 : (player.x > this.x ? 1 : -1);
-            this.dy = Math.abs(player.y - this.y) < 4 ? 0 : (player.y > this.y ? 1 : -1);
+
+        this.stuckCheckTimer++;
+        if (this.stuckCheckTimer > 60) {
+            const distMoved = Math.hypot(this.x - this.historyX, this.y - this.historyY);
+            if (distMoved < 15) {
+                this.evadeTimer = 45;
+                const evadeAngle = Math.random() * Math.PI * 2;
+                this.evadeDx = Math.cos(evadeAngle);
+                this.evadeDy = Math.sin(evadeAngle);
+            }
+            this.historyX = this.x;
+            this.historyY = this.y;
+            this.stuckCheckTimer = 0;
         }
+
+        if (this.evadeTimer > 0) {
+            this.evadeTimer--;
+            this.dx = this.evadeDx;
+            this.dy = this.evadeDy;
+        } else {
+            if (this.moveCount > 30) speed *= (30 / this.moveCount);
+            if (Math.floor(this.moveCount) === 1) {
+                this.dx = Math.abs(player.x - this.x) < 4 ? 0 : (player.x > this.x ? 1 : -1);
+                this.dy = Math.abs(player.y - this.y) < 4 ? 0 : (player.y > this.y ? 1 : -1);
+            }
+        }
+
         const desiredX = this.x + (this.dx * speed), desiredY = this.y + (this.dy * speed);
-        if (!this.checkCollision(desiredX, desiredY)) { this.x = desiredX; this.y = desiredY; }
-        else {
+        if (!this.checkCollision(desiredX, desiredY)) {
+            this.x = desiredX; this.y = desiredY;
+        } else {
             if (this.dx !== 0 && !this.checkCollision(desiredX, this.y)) this.x = desiredX;
             else if (this.dy !== 0 && !this.checkCollision(this.x, desiredY)) this.y = desiredY;
             else {
@@ -706,7 +735,7 @@ class AuthenticHulk extends Entity {
         if (this.y <= this.radius || this.y >= state.height - this.radius) this.targetAngle = -this.targetAngle;
         this.clamp();
         humans.forEach(h => {
-            if (this.dist(h) < this.radius + h.radius - 2) {
+            if (this.dist(h) < this.radius + h.radius - 2 && (!state.waveClearDelay || state.waveClearDelay <= 0)) { // Prevent crushing during wave clear
                 h.marked = true; explode(h.x, h.y, '#f8c');
                 AudioSys.humanDie(); addFloat(h.x, h.y, 'CRUSHED', '#f00');
             }
@@ -768,9 +797,13 @@ class AuthenticBrain extends Entity {
         this.moveCount = 0; this.shootTimer = 60;
         this.dir = 0; this.lastDir = -1; this.detourDir = -1;
         this.score = 500; this.frameTimer = 0;
+        this.convertCooldown = 0; // Prevent instant multi-conversions
     }
     update() {
         if (state.warmup > 0) return;
+
+        // Cooldown timer
+        if (this.convertCooldown > 0) this.convertCooldown--;
 
         // Physical repulsion from ALL enemies (prevents ghosting through Hulks/Tanks/Grunts)
         enemies.forEach(e => {
@@ -839,13 +872,16 @@ class AuthenticBrain extends Entity {
             }
             this.lastDir = this.dir;
         }
+
         humans.forEach(h => {
-            if (this.dist(h) <= this.radius + h.radius - 2) {
-                h.marked = true; explode(h.x, h.y, '#f0f');
-                AudioSys.playTone(200, 'sawtooth', 0.3, 0.2); addFloat(h.x, h.y, 'CONVERTED', '#f0f');
-                enemies.push(new AuthenticProg(h.x, h.y));
+            if (this.convertCooldown <= 0 && h.state !== 'converting' && this.dist(h) <= this.radius + h.radius - 2) {
+                h.state = 'converting';
+                h.convertTimer = 45; // 0.75 second delay before becoming a Prog
+                h.convertingBrain = this; // Link the brain to the human so we can abort if it dies
+                this.convertCooldown = 60; // Brain must wait 1 second before grabbing another
             }
         });
+
         if (this.shootTimer-- <= 0) {
             this.shootTimer = 100 + Math.random() * 40;
             const dx = player.x - this.x, dy = player.y - this.y, dist = Math.hypot(dx, dy);
@@ -1119,8 +1155,31 @@ class AuthenticHuman extends Entity {
         this.targetAngle = this.wanderAngle;
         this.panic = 0; this.frameTimer = Math.floor(Math.random() * 60);
         this.spritesheetY = 0;
+        this.state = 'normal'; // NEW: track normal vs converting
+        this.convertTimer = 0; // NEW: track duration
     }
     update() {
+        // If caught by a brain, stop moving and tick down
+        if (this.state === 'converting') {
+            // Abort conversion if the brain that grabbed us was destroyed
+            if (this.convertingBrain && this.convertingBrain.marked) {
+                this.state = 'normal';
+                this.convertTimer = 0;
+                this.convertingBrain = null;
+                return;
+            }
+
+            this.convertTimer--;
+            if (this.convertTimer <= 0) {
+                this.marked = true;
+                explode(this.x, this.y, '#f0f');
+                AudioSys.playTone(200, 'sawtooth', 0.3, 0.2);
+                addFloat(this.x, this.y, 'CONVERTED', '#f0f');
+                enemies.push(new AuthenticProg(this.x, this.y));
+            }
+            return; // Skip normal movement
+        }
+
         enemies.forEach(e => {
             if (e.type === 'electrode' && !e.marked) {
                 const d = this.dist(e), minD = this.radius + e.radius + 5;
@@ -1180,7 +1239,7 @@ class AuthenticHuman extends Entity {
             this.spritesheetY = this.vy < 0 ? offset.u : offset.d;
         }
 
-        if (this.dist(player) < 20 && player.state === 'normal') {
+        if (this.dist(player) < 20 && player.state === 'normal' && (!state.waveClearDelay || state.waveClearDelay <= 0)) { // Prevent rescues during wave clear
             this.marked = true;
             state.score += state.rescueBonus;
             addFloat(this.x, this.y, `+${state.rescueBonus}`, '#0f0');
@@ -1190,6 +1249,13 @@ class AuthenticHuman extends Entity {
         }
     }
     draw() {
+        // Dramatic flashing effect while being converted
+        if (this.state === 'converting') {
+            const flashColor = (Math.floor(this.convertTimer / 4) % 2 === 0) ? '#f0f' : '#fff';
+            drawSpriteRect(this.x, this.y, 0, 0, .4, .8, flashColor);
+            return;
+        }
+
         if (ImageCache.draw(ctx, this.type, this.x, this.y, this.frameTimer, this.spritesheetY)) return;
         const walkPhase = this.frameTimer * 0.15;
         const phase = Math.sin(walkPhase), bob = phase * .04, armSwing = phase * .07, legStretch = phase * .05;
@@ -1464,8 +1530,9 @@ function update() {
     const remaining = enemies.filter(e => ['grunt', 'brain', 'prog', 'tank'].includes(e.type)).length;
     if(remaining === 0 && state.running && state.warmup <= 0) {
         // Initialize transition delay if it doesn't exist yet
-        if (!state.waveClearDelay) {
+        if (!state.waveClearDelay || state.waveClearDelay <= 0) {
             state.waveClearDelay = 120; // 120 frames = ~2 seconds of feedback delay
+            bullets = []; // Instantly clear all stray bullets from the screen!
         }
 
         state.waveClearDelay--;
