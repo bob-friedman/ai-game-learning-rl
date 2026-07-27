@@ -84,7 +84,7 @@ Instead of retaining top-k discrete token sequences, the Latent Reasoning Engine
 
 ### Defining the Qualitative Reward Target (QRM)
 
-* **Exemplar Embeddings:** We define a continuous ideal state by mapping highly verified, structurally sound examples of text into a dense vector space to find the positive centroid ($\mathbf{c}_{\text{ideal}}$). Simultaneously, we map logically flawed or trope-heavy examples to find a contrastive negative centroid ($\mathbf{c}_{\text{corrupt}}$).
+* **Exemplar Embeddings:** We define a continuous ideal state by mapping highly verified, structurally sound examples of text into a dense vector space to find the positive centroid c(ideal). Simultaneously, we map logically flawed or trope-heavy examples to find a contrastive negative centroid c(corrupt).
 * **The Optimization Loop:** At each token generation step $t$, the base model produces an initial hidden vector $h_t$. Before converting this vector to a word, we optimize it using Adam for $N$ steps to maximize the following objective function:
 
 $$\mathcal{J}(h_t) = \cos(h_t, \mathbf{c}_{\text{ideal}}) - 0.5 \cdot \cos(h_t, \mathbf{c}_{\text{corrupt}}) - \lambda \Vert{}h_t - h_{\text{initial}}\Vert{}_2$$
